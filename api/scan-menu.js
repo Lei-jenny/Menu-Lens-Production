@@ -251,16 +251,38 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
                             
                             // 执行JavaScript代码来获取polishMenuData
                             let menuData;
-                            // 在全局作用域中定义polishMenuData
-                            global.polishMenuData = undefined;
-                            // 执行JavaScript代码
-                            eval(jsText);
-                            // 从全局作用域获取polishMenuData
-                            menuData = global.polishMenuData;
                             
-                            // 如果全局作用域中没有，尝试从当前作用域获取
-                            if (!menuData && typeof polishMenuData !== 'undefined') {
-                                menuData = polishMenuData;
+                            try {
+                                // 创建一个沙箱环境来执行JavaScript
+                                const sandbox = { polishMenuData: undefined };
+                                const vm = require('vm');
+                                
+                                // 在沙箱中执行JavaScript代码
+                                const context = vm.createContext(sandbox);
+                                vm.runInContext(jsText, context);
+                                menuData = context.polishMenuData;
+                                
+                                console.log(`[${requestId}] Sandbox execution result:`, JSON.stringify(menuData, null, 2));
+                                
+                                // 如果沙箱中没有数据，尝试直接eval
+                                if (!menuData) {
+                                    console.log(`[${requestId}] Sandbox result is empty, trying direct eval`);
+                                    eval(jsText);
+                                    menuData = typeof polishMenuData !== 'undefined' ? polishMenuData : undefined;
+                                    console.log(`[${requestId}] Direct eval result:`, JSON.stringify(menuData, null, 2));
+                                }
+                            } catch (vmError) {
+                                console.error(`[${requestId}] VM execution error:`, vmError);
+                                console.log(`[${requestId}] Falling back to direct eval`);
+                                // 如果VM失败，尝试直接eval
+                                try {
+                                    eval(jsText);
+                                    menuData = typeof polishMenuData !== 'undefined' ? polishMenuData : undefined;
+                                    console.log(`[${requestId}] Direct eval fallback result:`, JSON.stringify(menuData, null, 2));
+                                } catch (evalError) {
+                                    console.error(`[${requestId}] Direct eval also failed:`, evalError);
+                                    menuData = undefined;
+                                }
                             }
                             
                             console.log(`[${requestId}] Parsed menu data:`, JSON.stringify(menuData, null, 2));

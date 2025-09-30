@@ -28,36 +28,36 @@ export default async function handler(req, res) {
         console.log(`[${requestId}] Image type:`, imageType);
         
         // 构建菜单扫描prompt
-        const scanPrompt = `You are an AI that converts a menu image into a specific JSON format. Your response MUST be a single, valid JSON code block and nothing else.
+        const scanPrompt = `You are an AI that converts a menu image into a JavaScript variable declaration. Your response MUST be a single, valid JavaScript code block and nothing else.
 
 Schema:
 Strictly follow this structure. The top-level original key should be the menu's source language.
 
-JSON example:
-{
-  "original": "Japanese",
-  "dishes": [
-    {
-      "original": "道産牛の炙り物",
-      "english": "Grilled Hokkaido beef",
-      "chinese": "炙烤北海道牛肉",
-      "japanese": "道産牛の炙り物",
-      "description": "牛肉 玉子豆腐 自家製 一味味噌辛子",
-      "description_en": "Beef with egg tofu and homemade spicy miso mustard.",
-      "description_zh": "牛肉配玉子豆腐和自制辣味噌芥末。",
-      "description_ja": "牛肉と玉子豆腐、自家製一味味噌辛子。",
-      "tags": ["contains-beef", "contains-egg"],
-      "nutrition": {
-        "calories": 450,
-        "protein": 35,
-        "carbs": 8,
-        "fat": 28,
-        "sodium": 680,
-        "allergens": "Beef, Egg, Soy"
-      }
-    }
-  ]
-}
+JavaScript example:
+const polishMenuData = {
+    original: "Japanese",
+    dishes: [
+        {
+            original: "道産牛の炙り物",
+            english: "Grilled Hokkaido beef",
+            chinese: "炙烤北海道牛肉",
+            japanese: "道産牛の炙り物",
+            description: "牛肉 玉子豆腐 自家製 一味味噌辛子",
+            description_en: "Beef with egg tofu and homemade spicy miso mustard.",
+            description_zh: "牛肉配玉子豆腐和自制辣味噌芥末。",
+            description_ja: "牛肉と玉子豆腐、自家製一味味噌辛子。",
+            tags: ["contains-beef", "contains-egg"],
+            nutrition: {
+                calories: 450,
+                protein: 35,
+                carbs: 8,
+                fat: 28,
+                sodium: 680,
+                allergens: "Beef, Eggs, Soy"
+            }
+        }
+    ]
+};
 
 Rules:
 - original & description: Use text exactly from the image. If there is no description, use an empty string "".
@@ -69,10 +69,10 @@ Rules:
   - carbs: Estimate carbohydrates in grams (typical range: 5-60g for main dishes, 2-30g for appetizers)
   - fat: Estimate fat in grams (typical range: 5-40g for main dishes, 2-20g for appetizers)
   - sodium: Estimate sodium in milligrams (typical range: 200-1500mg for main dishes, 100-800mg for appetizers)
-  - allergens: A comma-separated string from this list only: ["Fish", "Shellfish", "Beef", "Poultry", "Pork", "Egg", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.
+  - allergens: A comma-separated string from this list only: ["Seafood", "Beef", "Poultry", "Pork", "Eggs", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.
   - Base estimates on dish type, ingredients, and cooking method. Use reasonable ranges for restaurant portions.
 
-If the image is not a menu, return: {"error": "This image does not appear to be a menu. Please upload a clear menu image."}`;
+If the image is not a menu, return: const polishMenuData = {"error": "This image does not appear to be a menu. Please upload a clear menu image."};`;
         
         console.log(`[${requestId}] Using Gemini 2.0 Flash Lite for menu scanning`);
         
@@ -241,13 +241,17 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
                         console.log(`[${requestId}] Gemini returned text:`, part.text);
                         
                         try {
-                            // 尝试解析JSON响应
-                            const jsonMatch = part.text.match(/```json\s*([\s\S]*?)\s*```/) || part.text.match(/\{[\s\S]*\}/);
-                            const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : part.text;
+                            // 尝试解析JavaScript响应
+                            const jsMatch = part.text.match(/```javascript\s*([\s\S]*?)\s*```/) || part.text.match(/const polishMenuData\s*=\s*([\s\S]*?);/);
+                            const jsText = jsMatch ? jsMatch[1] || jsMatch[0] : part.text;
                             
-                            console.log(`[${requestId}] Extracted JSON text:`, jsonText);
+                            console.log(`[${requestId}] Extracted JavaScript text:`, jsText);
                             
-                            const menuData = JSON.parse(jsonText);
+                            // 执行JavaScript代码来获取polishMenuData
+                            let menuData;
+                            eval(jsText);
+                            menuData = polishMenuData;
+                            
                             console.log(`[${requestId}] Parsed menu data:`, JSON.stringify(menuData, null, 2));
                             
                             // 检查是否是错误响应
@@ -274,7 +278,7 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
                             }
                             
                         } catch (parseError) {
-                            console.error(`[${requestId}] JSON parse error:`, parseError);
+                            console.error(`[${requestId}] JavaScript parse error:`, parseError);
                             console.log(`[${requestId}] Using sample data due to parse error`);
                             
                             // 返回示例数据作为备用
@@ -305,7 +309,7 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
                                     ]
                                 },
                                 source: 'sample_fallback',
-                                error: 'JSON parse failed, using sample data'
+                                error: 'JavaScript parse failed, using sample data'
                             });
                         }
                     }

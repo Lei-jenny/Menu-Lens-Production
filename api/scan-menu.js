@@ -36,6 +36,8 @@ export default async function handler(req, res) {
         // 构建菜单扫描prompt
         const scanPrompt = `You are an AI that analyzes and digitizes a menu image into a specific JSON format. Your response MUST be a single, valid JSON code block and nothing else.
 
+CRITICAL: Never use placeholder text like "Lorem ipsum" or any filler content. If no description exists, use empty string "".
+
 Schema:
 Strictly follow this structure. The top-level original key should be the menu's source language. Note that nutrition fields must be estimated as numbers.
 
@@ -68,7 +70,7 @@ JSON
 
 Rules:
 
-original & description: Use text exactly from the image. If there is no description, use an empty string "". Do NOT use any placeholder text like "Lorem ipsum" or similar.
+original & description: Use text exactly from the image. If there is no description, use an empty string "". NEVER use placeholder text like "Lorem ipsum", "Sample text", or any other filler content. If no description exists, return "".
 
 Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja). If the original description is empty, all translated descriptions must also be empty strings "".
 

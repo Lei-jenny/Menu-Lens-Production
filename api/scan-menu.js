@@ -291,8 +291,12 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                                 dish[field].includes('consectetuer adipiscing') ||
                                                 dish[field].includes('sed diam nonummy') ||
                                                 dish[field].includes('No description available') ||
+                                                dish[field].includes('No description') ||
+                                                dish[field].includes('Description not available') ||
                                                 dish[field].includes('Sample text') ||
-                                                dish[field].includes('Placeholder')) {
+                                                dish[field].includes('Placeholder') ||
+                                                dish[field].includes('N/A') ||
+                                                dish[field].includes('Not specified')) {
                                                 console.log(`[${requestId}] Cleaning ${field} for dish ${index}: "${dish[field]}"`);
                                                 dish[field] = "";
                                             }

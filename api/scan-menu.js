@@ -276,7 +276,31 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                             
                             // 验证数据结构
                             if (menuData.original && menuData.dishes && Array.isArray(menuData.dishes)) {
-                                console.log(`[${requestId}] Menu scan successful`);
+                                // 后处理：过滤Lorem ipsum文本
+                                console.log(`[${requestId}] Post-processing to remove Lorem ipsum text...`);
+                                
+                                menuData.dishes.forEach((dish, index) => {
+                                    // 检查并清理description字段
+                                    const fieldsToClean = ['description', 'description_en', 'description_zh', 'description_ja'];
+                                    
+                                    fieldsToClean.forEach(field => {
+                                        if (dish[field] && typeof dish[field] === 'string') {
+                                            // 检查是否包含Lorem ipsum或类似占位符文本
+                                            if (dish[field].includes('Lorem ipsum') || 
+                                                dish[field].includes('dolor sit amet') ||
+                                                dish[field].includes('consectetuer adipiscing') ||
+                                                dish[field].includes('sed diam nonummy') ||
+                                                dish[field].includes('No description available') ||
+                                                dish[field].includes('Sample text') ||
+                                                dish[field].includes('Placeholder')) {
+                                                console.log(`[${requestId}] Cleaning ${field} for dish ${index}: "${dish[field]}"`);
+                                                dish[field] = "";
+                                            }
+                                        }
+                                    });
+                                });
+                                
+                                console.log(`[${requestId}] Menu scan successful after post-processing`);
                                 return res.status(200).json({
                                     success: true,
                                     data: menuData,

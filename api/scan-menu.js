@@ -69,9 +69,9 @@ Rules:
 
 If the image is not a menu, return: {"error": "This image does not appear to be a menu. Please upload a clear menu image."}`;
         
-        console.log(`[${requestId}] Using Gemini 2.0 Flash Lite Preview for menu scanning`);
+        console.log(`[${requestId}] Using Gemini 2.0 Flash Lite for menu scanning`);
         
-        // 使用Gemini 2.0 Flash Lite Preview API
+        // 使用Gemini 2.0 Flash Lite API
         const requestBody = {
             "contents": [
                 {
@@ -124,7 +124,7 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
             
-            geminiResponse = await fetch('https://ai.juguang.chat/v1beta/models/gemini-2.0-flash-lite-preview:generateContent', {
+            geminiResponse = await fetch('https://ai.juguang.chat/v1beta/models/gemini-2.0-flash-lite:generateContent', {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer sk-o4mIilLIlhQurOQ8TE1DhtCQYk7m4Q8sR0foh2JCvYzuDfHX',
@@ -349,3 +349,4 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
         });
     }
 }
+

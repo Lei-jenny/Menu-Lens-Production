@@ -39,6 +39,8 @@ export default async function handler(req, res) {
 🚨 CRITICAL RULE: NEVER use placeholder text or filler content. If no description exists, use empty string "". 
 FORBIDDEN: "Lorem ipsum", "No description available", "Sample text", "Placeholder", or any similar filler text.
 
+📋 IMPORTANT: You must process ALL dishes visible in the menu image. Do not limit the number of dishes. Include every single dish you can see, even if there are many.
+
 Schema:
 Strictly follow this structure. The top-level original key should be the menu's source language. Note that nutrition fields must be estimated as numbers.
 
@@ -111,7 +113,7 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                 "temperature": 0.3,
                 "topK": 20,
                 "topP": 0.8,
-                "maxOutputTokens": 2048
+                "maxOutputTokens": 8192
             },
             "safetySettings": [
                 {
@@ -141,7 +143,7 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
             
             // 创建AbortController用于超时控制
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 120秒超时，处理更多菜品需要更长时间
             
             geminiResponse = await fetch('https://ai.juguang.chat/v1beta/models/gemini-2.0-flash-lite:generateContent', {
                 method: 'POST',

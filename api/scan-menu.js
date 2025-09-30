@@ -337,8 +337,35 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                 return jsonStr;
                             }
                             
+                            // 高级JSON修复函数
+                            function advancedJsonFix(jsonStr) {
+                                // 修复常见的JSON问题
+                                jsonStr = jsonStr
+                                    // 修复缺失的逗号
+                                    .replace(/"\s*}\s*"/g, '", "')  // 对象之间缺少逗号
+                                    .replace(/"\s*]\s*"/g, '", "')  // 数组元素之间缺少逗号
+                                    .replace(/"\s*}\s*{/g, '", {')  // 对象之间缺少逗号
+                                    .replace(/"\s*]\s*{/g, '", {')  // 数组和对象之间缺少逗号
+                                    // 修复多余的逗号
+                                    .replace(/,\s*}/g, '}')  // 对象结尾的逗号
+                                    .replace(/,\s*]/g, ']')  // 数组结尾的逗号
+                                    // 修复缺失的引号
+                                    .replace(/(\w+):/g, '"$1":')  // 键名加引号
+                                    // 修复字符串中的引号
+                                    .replace(/([^\\])"/g, '$1\\"')  // 转义字符串中的引号
+                                    .replace(/^"/g, '\\"')  // 开头引号
+                                    .replace(/"$/g, '\\"')  // 结尾引号
+                                    // 修复数组和对象结构
+                                    .replace(/\}\s*\]/g, '}]')  // 数组结尾
+                                    .replace(/\}\s*\}/g, '}}')  // 对象结尾
+                                    .replace(/\}\s*$/g, '}]}');  // JSON结尾
+                                
+                                return jsonStr;
+                            }
+                            
                             // 应用智能修复
                             jsonText = fixJsonStructure(jsonText);
+                            jsonText = advancedJsonFix(jsonText);
                             console.log(`[${requestId}] After structure fix:`, jsonText);
                             
                             // 尝试多次修复JSON
@@ -355,6 +382,7 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     
                                     if (attempts < 3) {
                                         // 尝试额外的修复
+                                        jsonText = advancedJsonFix(jsonText);
                                         jsonText = jsonText
                                             .replace(/,\s*,/g, ',')  // 移除重复逗号
                                             .replace(/\[\s*,/g, '[')  // 修复数组开头逗号

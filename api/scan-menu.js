@@ -4,100 +4,59 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
+    // 处理预检请求
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
+    }
+    
+    // 只允许POST请求
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
     }
     
     try {
         // 生成唯一的请求ID来跟踪多次调用
         const requestId = Math.random().toString(36).substring(2, 15);
         
-        console.log('=== New Menu Scan Request ===');
+        console.log('=== New Image Generation Request ===');
         console.log('Request ID:', requestId);
         console.log('Timestamp:', new Date().toISOString());
         console.log('Received request:', req.body);
         
-        const { imageData, imageType } = req.body;
+        const { prompt, model, size, quality, style, n } = req.body;
         
-        if (!imageData) {
-            return res.status(400).json({ error: 'Image data is required' });
+        if (!prompt) {
+            return res.status(400).json({ error: 'Prompt is required' });
         }
         
-        console.log(`[${requestId}] Scanning menu image...`);
-        console.log(`[${requestId}] Image type:`, imageType);
+        console.log(`[${requestId}] Generating image with prompt:`, prompt);
+        console.log(`[${requestId}] Request body:`, JSON.stringify(req.body, null, 2));
         
-        // 构建菜单扫描prompt
-        const scanPrompt = `You are an AI that converts a menu image into a JavaScript variable declaration. Your response MUST be a single, valid JavaScript code block and nothing else.
-
-Schema:
-Strictly follow this structure. The top-level original key should be the menu's source language.
-
-JavaScript example:
-const polishMenuData = {
-    original: "Japanese",
-    dishes: [
-        {
-            original: "道産牛の炙り物",
-            english: "Grilled Hokkaido beef",
-            chinese: "炙烤北海道牛肉",
-            japanese: "道産牛の炙り物",
-            description: "牛肉 玉子豆腐 自家製 一味味噌辛子",
-            description_en: "Beef with egg tofu and homemade spicy miso mustard.",
-            description_zh: "牛肉配玉子豆腐和自制辣味噌芥末。",
-            description_ja: "牛肉と玉子豆腐、自家製一味味噌辛子。",
-            tags: ["contains-beef", "contains-egg"],
-            nutrition: {
-                calories: 450,
-                protein: 35,
-                carbs: 8,
-                fat: 28,
-                sodium: 680,
-                allergens: "Beef, Eggs, Soy"
-            }
-        }
-    ]
-};
-
-Rules:
-- original & description: Use text exactly from the image. If there is no description, use an empty string "".
-- Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja).
-- tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
-- nutrition:
-  - calories: Estimate calories per serving (typical range: 200-800 for main dishes, 100-400 for appetizers)
-  - protein: Estimate protein in grams (typical range: 10-50g for main dishes, 5-20g for appetizers)
-  - carbs: Estimate carbohydrates in grams (typical range: 5-60g for main dishes, 2-30g for appetizers)
-  - fat: Estimate fat in grams (typical range: 5-40g for main dishes, 2-20g for appetizers)
-  - sodium: Estimate sodium in milligrams (typical range: 200-1500mg for main dishes, 100-800mg for appetizers)
-  - allergens: A comma-separated string from this list only: ["Seafood", "Beef", "Poultry", "Pork", "Eggs", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.
-  - Base estimates on dish type, ingredients, and cooking method. Use reasonable ranges for restaurant portions.
-
-If the image is not a menu, return: const polishMenuData = {"error": "This image does not appear to be a menu. Please upload a clear menu image."};`;
+        // 使用Gemini API生成图片
+        console.log(`[${requestId}] Using Gemini API for image generation`);
         
-        console.log(`[${requestId}] Using Gemini 2.0 Flash Lite for menu scanning`);
+        // 构建图片生成prompt
+        let imagePrompt = `Generate a high-quality food image of: ${prompt}`;
         
-        // 使用Gemini 2.0 Flash Lite API
+        console.log(`[${requestId}] 构建的图片生成prompt:`, imagePrompt);
+        
+        // 使用Gemini 2.5 Flash Image Preview API
         const requestBody = {
             "contents": [
                 {
                     "parts": [
                         {
-                            "text": scanPrompt
-                        },
-                        {
-                            "inlineData": {
-                                "mimeType": imageType || "image/jpeg",
-                                "data": imageData
-                            }
+                            "text": imagePrompt
                         }
                     ]
                 }
             ],
             "generationConfig": {
-                "temperature": 0.3,
+                "temperature": 0.7,
                 "topK": 20,
                 "topP": 0.8,
-                "maxOutputTokens": 2048
+                "maxOutputTokens": 1024
             },
             "safetySettings": [
                 {
@@ -129,7 +88,8 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
             
-            geminiResponse = await fetch('https://ai.juguang.chat/v1beta/models/gemini-2.0-flash-lite:generateContent', {
+            // 使用图片生成模型
+            geminiResponse = await fetch('https://ai.juguang.chat/v1beta/models/gemini-2.5-flash-image-preview:generateContent', {
                 method: 'POST',
                 headers: {
                     'Authorization': 'Bearer sk-o4mIilLIlhQurOQ8TE1DhtCQYk7m4Q8sR0foh2JCvYzuDfHX',
@@ -142,79 +102,96 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
             clearTimeout(timeoutId);
             console.log(`[${requestId}] Gemini API request completed, status:`, geminiResponse.status);
             
+            // 如果是429错误，等待一段时间后重试一次
+            if (geminiResponse.status === 429) {
+                console.log(`[${requestId}] Rate limit hit, waiting 2 seconds before retry...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                console.log(`[${requestId}] Retrying Gemini API request...`);
+                const retryController = new AbortController();
+                const retryTimeoutId = setTimeout(() => retryController.abort(), 60000);
+                
+                geminiResponse = await fetch('https://ai.juguang.chat/v1beta/models/gemini-2.5-flash-image-preview:generateContent', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer sk-o4mIilLIlhQurOQ8TE1DhtCQYk7m4Q8sR0foh2JCvYzuDfHX',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody),
+                    signal: retryController.signal
+                });
+                
+                clearTimeout(retryTimeoutId);
+                console.log(`[${requestId}] Gemini API retry completed, status:`, geminiResponse.status);
+            }
         } catch (fetchError) {
-            console.error(`[${requestId}] Gemini API fetch error:`, fetchError);
-            console.log(`[${requestId}] Gemini API failed due to fetch error, using sample data`);
+            console.error('Gemini API fetch error:', fetchError);
+            console.log('Gemini API failed due to fetch error, using Unsplash as fallback');
             
-            // 返回示例数据作为备用
-            return res.status(200).json({
-                success: true,
-                data: {
-                    "original": "English",
-                    "dishes": [
-                        {
-                            "original": "Sample Dish 1",
-                            "english": "Sample Dish 1",
-                            "chinese": "示例菜品 1",
-                            "japanese": "サンプル料理 1",
-                            "description": "Sample description",
-                            "description_en": "Sample description",
-                            "description_zh": "示例描述",
-                            "description_ja": "サンプル説明",
-                            "tags": ["vegetarian"],
-                            "nutrition": {
-                                "calories": 320,
-                                "protein": 12,
-                                "carbs": 45,
-                                "fat": 8,
-                                "sodium": 420,
-                                "allergens": "None"
-                            }
-                        }
-                    ]
-                },
-                source: 'sample_fallback',
-                error: 'API fetch failed, using sample data'
+            // 直接使用Unsplash作为备用
+            const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(prompt)}&per_page=3&orientation=landscape&order_by=relevant&client_id=YRtZM4GfSkIrBBbFBFlrDO98J91yjUBEhgxRx1yblA4`);
+            
+            if (unsplashResponse.ok) {
+                const unsplashResult = await unsplashResponse.json();
+                if (unsplashResult.results && unsplashResult.results.length > 0) {
+                    const imageUrl = unsplashResult.results[0].urls.regular;
+                    return res.status(200).json({
+                        success: true,
+                        data: [{
+                            url: imageUrl,
+                            alt: unsplashResult.results[0].alt_description || prompt
+                        }],
+                        prompt: prompt,
+                        source: 'unsplash_fallback'
+                    });
+                }
+            }
+            
+            return res.status(500).json({ 
+                error: `Gemini API fetch failed: ${fetchError.message}` 
             });
         }
         
-        console.log(`[${requestId}] Gemini API response status:`, geminiResponse.status);
-        console.log(`[${requestId}] Gemini API response headers:`, Object.fromEntries(geminiResponse.headers.entries()));
+        console.log('Gemini API response status:', geminiResponse.status);
+        console.log('Gemini API response headers:', Object.fromEntries(geminiResponse.headers.entries()));
         
         if (!geminiResponse.ok) {
             const errorText = await geminiResponse.text();
             console.error(`[${requestId}] Gemini API error:`, geminiResponse.status, errorText);
-            console.log(`[${requestId}] Gemini API failed, using sample data`);
+            console.error(`[${requestId}] Gemini API error details:`, {
+                status: geminiResponse.status,
+                statusText: geminiResponse.statusText,
+                headers: Object.fromEntries(geminiResponse.headers.entries()),
+                body: errorText
+            });
             
-            // 返回示例数据作为备用
-            return res.status(200).json({
-                success: true,
-                data: {
-                    "original": "English",
-                    "dishes": [
-                        {
-                            "original": "Sample Dish 1",
-                            "english": "Sample Dish 1",
-                            "chinese": "示例菜品 1",
-                            "japanese": "サンプル料理 1",
-                            "description": "Sample description",
-                            "description_en": "Sample description",
-                            "description_zh": "示例描述",
-                            "description_ja": "サンプル説明",
-                            "tags": ["vegetarian"],
-                            "nutrition": {
-                                "calories": 320,
-                                "protein": 12,
-                                "carbs": 45,
-                                "fat": 8,
-                                "sodium": 420,
-                                "allergens": "None"
-                            }
-                        }
-                    ]
-                },
-                source: 'sample_fallback',
-                error: `Gemini API error: ${geminiResponse.status}`
+            // 检查是否是配额超限错误
+            if (geminiResponse.status === 429) {
+                console.log(`[${requestId}] Gemini API quota exceeded, using Unsplash as fallback`);
+                console.log(`[${requestId}] Error message: You exceeded your current quota, please check your plan and billing details`);
+            } else {
+                console.log(`[${requestId}] Gemini API failed with status ${geminiResponse.status}, using Unsplash as fallback`);
+            }
+            const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(prompt)}&per_page=3&orientation=landscape&order_by=relevant&client_id=YRtZM4GfSkIrBBbFBFlrDO98J91yjUBEhgxRx1yblA4`);
+            
+            if (unsplashResponse.ok) {
+                const unsplashResult = await unsplashResponse.json();
+                if (unsplashResult.results && unsplashResult.results.length > 0) {
+                    const imageUrl = unsplashResult.results[0].urls.regular;
+                    return res.status(200).json({
+                        success: true,
+                        data: [{
+                            url: imageUrl,
+                            alt: unsplashResult.results[0].alt_description || prompt
+                        }],
+                        prompt: prompt,
+                        source: 'unsplash_fallback'
+                    });
+                }
+            }
+            
+            return res.status(geminiResponse.status).json({ 
+                error: `Gemini API error: ${geminiResponse.status} - ${errorText}` 
             });
         }
         
@@ -225,128 +202,185 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
         console.log(`[${requestId}] Checking Gemini response structure...`);
         console.log(`[${requestId}] Has candidates:`, !!result.candidates);
         console.log(`[${requestId}] Candidates length:`, result.candidates ? result.candidates.length : 0);
+        console.log(`[${requestId}] Response keys:`, Object.keys(result));
+        
+        // 检查是否有finishReason字段，这可能表明生成状态
+        if (result.candidates && result.candidates.length > 0) {
+            const candidate = result.candidates[0];
+            console.log(`[${requestId}] Candidate finishReason:`, candidate.finishReason);
+            console.log(`[${requestId}] Candidate safetyRatings:`, candidate.safetyRatings);
+            
+            // 检查是否因为安全原因被阻止
+            if (candidate.finishReason === 'SAFETY') {
+                console.log(`[${requestId}] Gemini API blocked due to safety concerns`);
+                console.log(`[${requestId}] Safety ratings:`, candidate.safetyRatings);
+            }
+            
+            // 检查是否因为其他原因被阻止
+            if (candidate.finishReason === 'RECITATION') {
+                console.log(`[${requestId}] Gemini API blocked due to recitation concerns`);
+            }
+            
+            if (candidate.finishReason === 'OTHER') {
+                console.log(`[${requestId}] Gemini API blocked for other reasons`);
+            }
+        }
+        
+        // 首先检查是否有直接的图片URL
+        if (result.images && Array.isArray(result.images) && result.images.length > 0) {
+            console.log(`[${requestId}] Found images in result.images:`, result.images);
+            return res.status(200).json({
+                success: true,
+                data: result.images.map(img => ({
+                    url: img.url || img,
+                    alt: prompt
+                })),
+                prompt: prompt,
+                source: 'gemini_direct'
+            });
+        }
+        
+        // 检查是否有其他直接的图片字段
+        if (result.image && result.image.url) {
+            console.log(`[${requestId}] Found image in result.image:`, result.image);
+            return res.status(200).json({
+                success: true,
+                data: [{
+                    url: result.image.url,
+                    alt: prompt
+                }],
+                prompt: prompt,
+                source: 'gemini_single'
+            });
+        }
         
         if (result.candidates && result.candidates.length > 0) {
             const candidate = result.candidates[0];
-            console.log(`[${requestId}] First candidate:`, JSON.stringify(candidate, null, 2));
+            console.log('First candidate:', JSON.stringify(candidate, null, 2));
             
             if (candidate.content && candidate.content.parts) {
-                console.log(`[${requestId}] Content parts length:`, candidate.content.parts.length);
+                console.log('Content parts length:', candidate.content.parts.length);
                 
                 for (let i = 0; i < candidate.content.parts.length; i++) {
                     const part = candidate.content.parts[i];
-                    console.log(`[${requestId}] Part ${i}:`, JSON.stringify(part, null, 2));
+                    console.log(`Part ${i}:`, JSON.stringify(part, null, 2));
                     
-                    if (part.text) {
-                        console.log(`[${requestId}] Gemini returned text:`, part.text);
+                    if (part.inlineData && part.inlineData.data) {
+                        // Gemini返回的是base64编码的图片数据
+                        const imageData = part.inlineData.data;
+                        const mimeType = part.inlineData.mimeType || 'image/jpeg';
                         
-                        try {
-                            // 尝试解析JavaScript响应
-                            const jsMatch = part.text.match(/```javascript\s*([\s\S]*?)\s*```/) || part.text.match(/const polishMenuData\s*=\s*([\s\S]*?);/);
-                            const jsText = jsMatch ? jsMatch[1] || jsMatch[0] : part.text;
-                            
-                            console.log(`[${requestId}] Extracted JavaScript text:`, jsText);
-                            
-                            // 执行JavaScript代码来获取polishMenuData
-                            let menuData;
-                            eval(jsText);
-                            menuData = polishMenuData;
-                            
-                            console.log(`[${requestId}] Parsed menu data:`, JSON.stringify(menuData, null, 2));
-                            
-                            // 检查是否是错误响应
-                            if (menuData.error) {
-                                console.log(`[${requestId}] Menu scan error:`, menuData.error);
-                                return res.status(200).json({
-                                    success: false,
-                                    error: menuData.error,
-                                    source: 'gemini_scan'
-                                });
-                            }
-                            
-                            // 验证数据结构
-                            if (menuData.original && menuData.dishes && Array.isArray(menuData.dishes)) {
-                                console.log(`[${requestId}] Menu scan successful`);
+                        console.log('Gemini API returned image data, mimeType:', mimeType);
+                        console.log('Image data length:', imageData ? imageData.length : 0);
+                        
+                        return res.status(200).json({
+                            success: true,
+                            data: [{
+                                url: `data:${mimeType};base64,${imageData}`,
+                                alt: prompt
+                            }],
+                            prompt: prompt,
+                            source: 'gemini'
+                        });
+                    }
+                }
+            }
+        }
+        
+        // 尝试其他可能的响应结构
+        console.log('Trying alternative response structures...');
+        
+        // 检查是否有直接的图片URL
+        if (result.images && result.images.length > 0) {
+            console.log('Found images in result.images');
+            return res.status(200).json({
+                success: true,
+                data: result.images.map(img => ({
+                    url: img.url || img,
+                    alt: prompt
+                })),
+                prompt: prompt,
+                source: 'gemini_alternative'
+            });
+        }
+        
+        // 检查是否有其他结构
+        if (result.data && result.data.length > 0) {
+            console.log('Found images in result.data');
+            return res.status(200).json({
+                success: true,
+                data: result.data.map(img => ({
+                    url: img.url || img,
+                    alt: prompt
+                })),
+                prompt: prompt,
+                source: 'gemini_data'
+            });
+        }
+        
+        // 检查是否有文本描述（可能Gemini返回的是文本而不是图片）
+        if (result.candidates && result.candidates.length > 0) {
+            const candidate = result.candidates[0];
+            if (candidate.content && candidate.content.parts) {
+                for (const part of candidate.content.parts) {
+                    if (part.text) {
+                        console.log(`[${requestId}] Gemini returned text instead of image:`, part.text);
+                        // 如果返回的是文本描述，我们可以使用这个描述来搜索Unsplash
+                        const searchQuery = part.text.substring(0, 100); // 限制长度
+                        console.log(`[${requestId}] Using Gemini text description for Unsplash search:`, searchQuery);
+                        
+                        const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(searchQuery)}&per_page=3&orientation=landscape&order_by=relevant&client_id=YRtZM4GfSkIrBBbFBFlrDO98J91yjUBEhgxRx1yblA4`);
+                        
+                        if (unsplashResponse.ok) {
+                            const unsplashResult = await unsplashResponse.json();
+                            if (unsplashResult.results && unsplashResult.results.length > 0) {
+                                const imageUrl = unsplashResult.results[0].urls.regular;
                                 return res.status(200).json({
                                     success: true,
-                                    data: menuData,
-                                    source: 'gemini_scan'
+                                    data: [{
+                                        url: imageUrl,
+                                        alt: part.text.substring(0, 100)
+                                    }],
+                                    prompt: prompt,
+                                    source: 'unsplash_with_gemini_description'
                                 });
-                            } else {
-                                console.log(`[${requestId}] Invalid menu data structure`);
-                                throw new Error('Invalid menu data structure');
                             }
-                            
-                        } catch (parseError) {
-                            console.error(`[${requestId}] JavaScript parse error:`, parseError);
-                            console.log(`[${requestId}] Using sample data due to parse error`);
-                            
-                            // 返回示例数据作为备用
-                            return res.status(200).json({
-                                success: true,
-                                data: {
-                                    "original": "English",
-                                    "dishes": [
-                                        {
-                                            "original": "Sample Dish 1",
-                                            "english": "Sample Dish 1",
-                                            "chinese": "示例菜品 1",
-                                            "japanese": "サンプル料理 1",
-                                            "description": "Sample description",
-                                            "description_en": "Sample description",
-                                            "description_zh": "示例描述",
-                                            "description_ja": "サンプル説明",
-                                            "tags": ["vegetarian"],
-                                            "nutrition": {
-                                                "calories": null,
-                                                "protein": null,
-                                                "carbs": null,
-                                                "fat": null,
-                                                "sodium": null,
-                                                "allergens": "None"
-                                            }
-                                        }
-                                    ]
-                                },
-                                source: 'sample_fallback',
-                                error: 'JavaScript parse failed, using sample data'
-                            });
                         }
                     }
                 }
             }
         }
         
-        // 如果没有找到有效响应，返回示例数据
-        console.log(`[${requestId}] No valid response found, using sample data`);
-        return res.status(200).json({
-            success: true,
-            data: {
-                "original": "English",
-                "dishes": [
-                    {
-                        "original": "Sample Dish 1",
-                        "english": "Sample Dish 1",
-                        "chinese": "示例菜品 1",
-                        "japanese": "サンプル料理 1",
-                        "description": "Sample description",
-                        "description_en": "Sample description",
-                        "description_zh": "示例描述",
-                        "description_ja": "サンプル説明",
-                        "tags": ["vegetarian"],
-                        "nutrition": {
-                            "calories": null,
-                            "protein": null,
-                            "carbs": null,
-                            "fat": null,
-                            "sodium": null,
-                            "allergens": "None"
-                        }
-                    }
-                ]
-            },
-            source: 'sample_fallback',
-            error: 'No valid response found'
+        // 如果没有找到图片数据，使用Unsplash作为备用
+        console.log(`[${requestId}] Gemini API did not return image data in expected format, using Unsplash as fallback`);
+        console.log(`[${requestId}] Full response structure for debugging:`, {
+            hasCandidates: !!result.candidates,
+            candidatesLength: result.candidates ? result.candidates.length : 0,
+            responseKeys: Object.keys(result),
+            firstCandidateKeys: result.candidates && result.candidates[0] ? Object.keys(result.candidates[0]) : null,
+            finishReason: result.candidates && result.candidates[0] ? result.candidates[0].finishReason : null,
+            safetyRatings: result.candidates && result.candidates[0] ? result.candidates[0].safetyRatings : null
+        });
+        const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(prompt)}&per_page=3&orientation=landscape&order_by=relevant&client_id=YRtZM4GfSkIrBBbFBFlrDO98J91yjUBEhgxRx1yblA4`);
+        
+        if (unsplashResponse.ok) {
+            const unsplashResult = await unsplashResponse.json();
+            if (unsplashResult.results && unsplashResult.results.length > 0) {
+                const imageUrl = unsplashResult.results[0].urls.regular;
+                return res.status(200).json({
+                    success: true,
+                    data: [{
+                        url: imageUrl,
+                        alt: unsplashResult.results[0].alt_description || prompt
+                    }],
+                    prompt: prompt,
+                    source: 'unsplash_fallback'
+                });
+            }
+        }
+        
+        return res.status(500).json({ 
+            error: 'No images generated by Gemini or Unsplash' 
         });
         
     } catch (error) {

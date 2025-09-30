@@ -906,11 +906,10 @@
             right: 0;
             bottom: 0;
             background: rgba(255, 255, 255, 0.9);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            display: none;
         }
 
         .loading-spinner {
@@ -948,10 +947,30 @@
             transition: transform 0.3s ease;
             max-width: 300px;
             word-wrap: break-word;
+            cursor: pointer;
         }
 
         .notification.show {
             transform: translateX(0);
+        }
+
+        .notification-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 12px;
+            height: 12px;
+            background: var(--success-green);
+            border-radius: 50%;
+            z-index: 1002;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .notification.error {
@@ -1214,6 +1233,7 @@
     </div>
 
     <!-- Notification System -->
+    <div class="notification-indicator" id="notificationIndicator" style="display: none;"></div>
     <div class="notification" id="notification"></div>
 
     <script>
@@ -1608,6 +1628,7 @@
                     'nutFree': 'Nut Free',
                     'containsEggs': 'Contains Eggs',
                     'containsBeef': 'Contains Beef',
+                    'containsPoultry': 'Contains Poultry',
                     'containsSeafood': 'Contains Seafood',
                     'containsGluten': 'Contains Gluten',
                     'containsNuts': 'Contains Nuts',
@@ -1641,6 +1662,7 @@
                     'nutFree': '无坚果',
                     'containsEggs': '含鸡蛋',
                     'containsBeef': '含牛肉',
+                    'containsPoultry': '含禽肉',
                     'containsSeafood': '含海鲜',
                     'containsGluten': '含麸质',
                     'containsNuts': '含坚果',
@@ -1674,6 +1696,7 @@
                     'nutFree': 'ナッツフリー',
                     'containsEggs': '卵含有',
                     'containsBeef': '牛肉含有',
+                    'containsPoultry': '鶏肉含有',
                     'containsSeafood': '魚介類含有',
                     'containsGluten': 'グルテン含有',
                     'containsNuts': 'ナッツ含有',
@@ -1721,9 +1744,14 @@
         // Notification system
         function showNotification(message, type = 'success', duration = 5000) {
             const notification = document.getElementById('notification');
+            const indicator = document.getElementById('notificationIndicator');
+            
             notification.textContent = message;
             notification.className = `notification ${type}`;
-            notification.classList.add('show');
+            
+            // Show indicator instead of notification
+            indicator.style.display = 'block';
+            notification.classList.remove('show');
             
             console.log(`[${type.toUpperCase()}] ${message}`);
             
@@ -1732,12 +1760,25 @@
                 clearTimeout(notification.timeoutId);
             }
             
-            // Set new timeout
+            // Set new timeout to hide indicator
             notification.timeoutId = setTimeout(() => {
-                notification.classList.remove('show');
+                indicator.style.display = 'none';
                 // Clean up timeout reference
                 delete notification.timeoutId;
             }, duration);
+        }
+
+        // Toggle notification visibility
+        function toggleNotification() {
+            const notification = document.getElementById('notification');
+            const indicator = document.getElementById('notificationIndicator');
+            
+            if (notification.classList.contains('show')) {
+                notification.classList.remove('show');
+            } else {
+                notification.classList.add('show');
+                indicator.style.display = 'none';
+            }
         }
 
         // Loading overlay
@@ -2175,7 +2216,9 @@
                 'contains-pork': `🐷 ${getTranslation('containsPork')}`,
                 'contains-dairy': `🥛 ${getTranslation('containsDairy')}`,
                 'contains-eggs': `🥚 ${getTranslation('containsEggs')}`,
+                'contains-egg': `🥚 ${getTranslation('containsEggs')}`,
                 'contains-beef': `🐄 ${getTranslation('containsBeef')}`,
+                'contains-poultry': `🐔 ${getTranslation('containsPoultry')}`,
                 'contains-seafood': `🐟 ${getTranslation('containsSeafood')}`,
                 'contains-gluten': `🌾 ${getTranslation('containsGluten')}`,
                 'contains-nuts': `🥜 ${getTranslation('containsNuts')}`,
@@ -2446,7 +2489,7 @@
                 return dish.description_en;
             }
             // 如果没有对应语言的描述，返回默认描述
-            return dish.description || dish.description_en || 'No description available';
+            return dish.description || dish.description_en || '';
         }
 
         // 检测文本语言类型
@@ -2590,6 +2633,10 @@
         function initializeApp() {
             // Initialize upload area
             initializeUploadArea();
+            
+            // Set up notification click handlers
+            document.getElementById('notification').addEventListener('click', toggleNotification);
+            document.getElementById('notificationIndicator').addEventListener('click', toggleNotification);
             
             // Initialize with English selected
             selectLanguage('en');

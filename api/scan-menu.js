@@ -4,9 +4,15 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
+    // 处理预检请求
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
+    }
+    
+    // 只允许POST请求
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
     }
     
     try {
@@ -28,53 +34,51 @@ export default async function handler(req, res) {
         console.log(`[${requestId}] Image type:`, imageType);
         
         // 构建菜单扫描prompt
-        const scanPrompt = `You are an AI that converts a menu image into a JavaScript variable declaration. Your response MUST be a single, valid JavaScript code block and nothing else.
+        const scanPrompt = `You are an AI that analyzes and digitizes a menu image into a specific JSON format. Your response MUST be a single, valid JSON code block and nothing else.
 
 Schema:
-Strictly follow this structure. The top-level original key should be the menu's source language.
+Strictly follow this structure. The top-level original key should be the menu's source language. Note that nutrition fields must be estimated as numbers.
 
-JavaScript example:
-const polishMenuData = {
-    original: "Japanese",
-    dishes: [
-        {
-            original: "道産牛の炙り物",
-            english: "Grilled Hokkaido beef",
-            chinese: "炙烤北海道牛肉",
-            japanese: "道産牛の炙り物",
-            description: "牛肉 玉子豆腐 自家製 一味味噌辛子",
-            description_en: "Beef with egg tofu and homemade spicy miso mustard.",
-            description_zh: "牛肉配玉子豆腐和自制辣味噌芥末。",
-            description_ja: "牛肉と玉子豆腐、自家製一味味噌辛子。",
-            tags: ["contains-beef", "contains-egg"],
-            nutrition: {
-                calories: 450,
-                protein: 35,
-                carbs: 8,
-                fat: 28,
-                sodium: 680,
-                allergens: "Beef, Eggs, Soy"
-            }
-        }
-    ]
-};
+JSON
+
+{
+  "original": "Polish",
+  "dishes": [
+    {
+      "original": "SPAGHETTI BOLOGNESE NEW",
+      "english": "Spaghetti Bolognese",
+      "chinese": "意大利肉酱面",
+      "japanese": "スパゲッティボロネーゼ",
+      "description": "Sos mięsny z wieprzowiny i wołowiny z pomidorami, czosnkiem i serem parmezanem na spaghetti.",
+      "description_en": "Pork and beef meat sauce with tomatoes, garlic, and Parmesan cheese over spaghetti.",
+      "description_zh": "猪肉牛肉酱配番茄、大蒜和帕尔马干酪，配意大利面。",
+      "description_ja": "豚肉と牛肉のミートソース、トマト、ニンニク、パルメザンチーズ、スパゲッティ添え。",
+      "tags": ["contains-pork", "contains-beef", "contains-dairy", "contains-gluten"],
+      "nutrition": {
+        "calories": 580,
+        "protein": 28,
+        "carbs": 65,
+        "fat": 18,
+        "sodium": 920,
+        "allergens": "Pork, Beef, Wheat, Dairy"
+      }
+    }
+  ]
+}
 
 Rules:
-- original: The detected language name of the menu (e.g., "Japanese", "Chinese", "English", "Polish", "Korean", "Thai", etc.)
-- dishes[].original: Use dish name text exactly from the image
-- dishes[].description: Use description text exactly from the image. If there is no description, use an empty string "". Do NOT use placeholder text like "Lorem ipsum" or any other filler text.
-- Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja). If the original description is empty, all translations should also be empty strings.
-- tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
-- nutrition:
-  - calories: Estimate calories per serving (typical range: 200-800 for main dishes, 100-400 for appetizers)
-  - protein: Estimate protein in grams (typical range: 10-50g for main dishes, 5-20g for appetizers)
-  - carbs: Estimate carbohydrates in grams (typical range: 5-60g for main dishes, 2-30g for appetizers)
-  - fat: Estimate fat in grams (typical range: 5-40g for main dishes, 2-20g for appetizers)
-  - sodium: Estimate sodium in milligrams (typical range: 200-1500mg for main dishes, 100-800mg for appetizers)
-  - allergens: A comma-separated string from this list only: ["Seafood", "Beef", "Poultry", "Pork", "Eggs", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.
-  - Base estimates on dish type, ingredients, and cooking method. Use reasonable ranges for restaurant portions.
 
-If the image is not a menu, return: const polishMenuData = {"error": "This image does not appear to be a menu. Please upload a clear menu image."};`;
+original & description: Use text exactly from the image. If there is no description, use an empty string "".
+
+Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja).
+
+tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
+
+nutrition:
+
+Estimate integer values for calories, protein, carbs, fat, and sodium based on the dish's likely ingredients and portion size.
+
+allergens: A comma-separated string from this list only: ["Fish", "Shellfish", "Beef", "Poultry", "Pork", "Egg", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.`;
         
         console.log(`[${requestId}] Using Gemini 2.0 Flash Lite for menu scanning`);
         
@@ -243,55 +247,14 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
                         console.log(`[${requestId}] Gemini returned text:`, part.text);
                         
                         try {
-                            // 尝试解析JavaScript响应
-                            const jsMatch = part.text.match(/```javascript\s*([\s\S]*?)\s*```/) || part.text.match(/const polishMenuData\s*=\s*([\s\S]*?);/);
-                            const jsText = jsMatch ? jsMatch[1] || jsMatch[0] : part.text;
+                            // 尝试解析JSON响应
+                            const jsonMatch = part.text.match(/```json\s*([\s\S]*?)\s*```/) || part.text.match(/\{[\s\S]*\}/);
+                            const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : part.text;
                             
-                            console.log(`[${requestId}] Extracted JavaScript text:`, jsText);
+                            console.log(`[${requestId}] Extracted JSON text:`, jsonText);
                             
-                            // 执行JavaScript代码来获取polishMenuData
-                            let menuData;
-                            
-                            try {
-                                // 创建一个沙箱环境来执行JavaScript
-                                const sandbox = { polishMenuData: undefined };
-                                const vm = require('vm');
-                                
-                                // 在沙箱中执行JavaScript代码
-                                const context = vm.createContext(sandbox);
-                                vm.runInContext(jsText, context);
-                                menuData = context.polishMenuData;
-                                
-                                console.log(`[${requestId}] Sandbox execution result:`, JSON.stringify(menuData, null, 2));
-                                
-                                // 如果沙箱中没有数据，尝试直接eval
-                                if (!menuData) {
-                                    console.log(`[${requestId}] Sandbox result is empty, trying direct eval`);
-                                    eval(jsText);
-                                    menuData = typeof polishMenuData !== 'undefined' ? polishMenuData : undefined;
-                                    console.log(`[${requestId}] Direct eval result:`, JSON.stringify(menuData, null, 2));
-                                }
-                            } catch (vmError) {
-                                console.error(`[${requestId}] VM execution error:`, vmError);
-                                console.log(`[${requestId}] Falling back to direct eval`);
-                                // 如果VM失败，尝试直接eval
-                                try {
-                                    eval(jsText);
-                                    menuData = typeof polishMenuData !== 'undefined' ? polishMenuData : undefined;
-                                    console.log(`[${requestId}] Direct eval fallback result:`, JSON.stringify(menuData, null, 2));
-                                } catch (evalError) {
-                                    console.error(`[${requestId}] Direct eval also failed:`, evalError);
-                                    menuData = undefined;
-                                }
-                            }
-                            
+                            const menuData = JSON.parse(jsonText);
                             console.log(`[${requestId}] Parsed menu data:`, JSON.stringify(menuData, null, 2));
-                            
-                            // 检查menuData是否有效
-                            if (!menuData) {
-                                console.log(`[${requestId}] Menu data is undefined, using sample data`);
-                                throw new Error('Menu data is undefined');
-                            }
                             
                             // 检查是否是错误响应
                             if (menuData.error) {
@@ -317,7 +280,7 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
                             }
                             
                         } catch (parseError) {
-                            console.error(`[${requestId}] JavaScript parse error:`, parseError);
+                            console.error(`[${requestId}] JSON parse error:`, parseError);
                             console.log(`[${requestId}] Using sample data due to parse error`);
                             
                             // 返回示例数据作为备用
@@ -337,18 +300,18 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
                                             "description_ja": "サンプル説明",
                                             "tags": ["vegetarian"],
                                             "nutrition": {
-                                                "calories": null,
-                                                "protein": null,
-                                                "carbs": null,
-                                                "fat": null,
-                                                "sodium": null,
+                                                "calories": 320,
+                                                "protein": 12,
+                                                "carbs": 45,
+                                                "fat": 8,
+                                                "sodium": 420,
                                                 "allergens": "None"
                                             }
                                         }
                                     ]
                                 },
                                 source: 'sample_fallback',
-                                error: 'JavaScript parse failed, using sample data'
+                                error: 'JSON parse failed, using sample data'
                             });
                         }
                     }
@@ -374,11 +337,11 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
                         "description_ja": "サンプル説明",
                         "tags": ["vegetarian"],
                         "nutrition": {
-                            "calories": null,
-                            "protein": null,
-                            "carbs": null,
-                            "fat": null,
-                            "sodium": null,
+                            "calories": 320,
+                            "protein": 12,
+                            "carbs": 45,
+                            "fat": 8,
+                            "sodium": 420,
                             "allergens": "None"
                         }
                     }

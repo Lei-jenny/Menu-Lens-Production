@@ -339,6 +339,11 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                             
                             // 高级JSON修复函数
                             function advancedJsonFix(jsonStr) {
+                                // 首先修复引号转义问题
+                                jsonStr = jsonStr
+                                    .replace(/\\"/g, '"')  // 修复错误的引号转义
+                                    .replace(/\\\\/g, '\\');  // 修复双重转义
+                                
                                 // 修复常见的JSON问题
                                 jsonStr = jsonStr
                                     // 修复缺失的逗号
@@ -351,10 +356,6 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     .replace(/,\s*]/g, ']')  // 数组结尾的逗号
                                     // 修复缺失的引号
                                     .replace(/(\w+):/g, '"$1":')  // 键名加引号
-                                    // 修复字符串中的引号
-                                    .replace(/([^\\])"/g, '$1\\"')  // 转义字符串中的引号
-                                    .replace(/^"/g, '\\"')  // 开头引号
-                                    .replace(/"$/g, '\\"')  // 结尾引号
                                     // 修复数组和对象结构
                                     .replace(/\}\s*\]/g, '}]')  // 数组结尾
                                     .replace(/\}\s*\}/g, '}}')  // 对象结尾
@@ -362,6 +363,10 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                 
                                 return jsonStr;
                             }
+                            
+                            // 首先清理Lorem ipsum内容
+                            jsonText = jsonText.replace(/Lorem ipsum[^"]*"/g, '""');
+                            jsonText = jsonText.replace(/Lorem ipsum[^"]*"/g, '""');
                             
                             // 应用智能修复
                             jsonText = fixJsonStructure(jsonText);
@@ -431,13 +436,18 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                                 dish[field].includes('dolor sit amet') ||
                                                 dish[field].includes('consectetuer adipiscing') ||
                                                 dish[field].includes('sed diam nonummy') ||
+                                                dish[field].includes('nibh euismod') ||
+                                                dish[field].includes('tincidunt ut') ||
+                                                dish[field].includes('laoreet dolore') ||
+                                                dish[field].includes('magna aliquam') ||
                                                 dish[field].includes('No description available') ||
                                                 dish[field].includes('No description') ||
                                                 dish[field].includes('Description not available') ||
                                                 dish[field].includes('Sample text') ||
                                                 dish[field].includes('Placeholder') ||
                                                 dish[field].includes('N/A') ||
-                                                dish[field].includes('Not specified')) {
+                                                dish[field].includes('Not specified') ||
+                                                dish[field].length > 100 && dish[field].includes('dolor')) {
                                                 console.log(`[${requestId}] Cleaning ${field} for dish ${index}: "${dish[field]}"`);
                                                 dish[field] = "";
                                             }

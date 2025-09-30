@@ -36,7 +36,8 @@ export default async function handler(req, res) {
         // 构建菜单扫描prompt
         const scanPrompt = `You are an AI that analyzes and digitizes a menu image into a specific JSON format. Your response MUST be a single, valid JSON code block and nothing else.
 
-CRITICAL: Never use placeholder text like "Lorem ipsum" or any filler content. If no description exists, use empty string "".
+🚨 CRITICAL RULE: NEVER use placeholder text or filler content. If no description exists, use empty string "". 
+FORBIDDEN: "Lorem ipsum", "No description available", "Sample text", "Placeholder", or any similar filler text.
 
 Schema:
 Strictly follow this structure. The top-level original key should be the menu's source language. Note that nutrition fields must be estimated as numbers.
@@ -70,17 +71,22 @@ JSON
 
 Rules:
 
-original & description: Use text exactly from the image. If there is no description, use an empty string "". NEVER use placeholder text like "Lorem ipsum", "Sample text", or any other filler content. If no description exists, return "".
+1. original & description: Use text exactly from the image. If there is no description visible, use empty string "". 
+   ❌ WRONG: "Lorem ipsum dolor sit amet..."
+   ❌ WRONG: "No description available"
+   ❌ WRONG: "Sample text"
+   ✅ CORRECT: ""
 
-Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja). If the original description is empty, all translated descriptions must also be empty strings "".
+2. Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja). 
+   If the original description is empty, all translated descriptions must also be empty strings "".
 
-tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
+3. tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
 
-nutrition:
+4. nutrition: Estimate integer values for calories, protein, carbs, fat, and sodium based on the dish's likely ingredients and portion size.
 
-Estimate integer values for calories, protein, carbs, fat, and sodium based on the dish's likely ingredients and portion size.
+5. allergens: A comma-separated string from this list only: ["Fish", "Shellfish", "Beef", "Poultry", "Pork", "Egg", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.
 
-allergens: A comma-separated string from this list only: ["Fish", "Shellfish", "Beef", "Poultry", "Pork", "Egg", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.`;
+REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
         
         console.log(`[${requestId}] Using Gemini 2.0 Flash Lite for menu scanning`);
         

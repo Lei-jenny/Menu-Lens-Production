@@ -923,12 +923,14 @@
             border-top: 4px solid var(--hilton-blue);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
 
         .loading-text {
             margin-top: 20px;
             color: var(--hilton-blue);
             font-weight: 600;
+            text-align: center;
         }
 
         /* Success Animation */
@@ -958,24 +960,6 @@
             transform: translateX(0);
         }
 
-        .notification-indicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 12px;
-            height: 12px;
-            background: var(--success-green);
-            border-radius: 50%;
-            z-index: 1002;
-            cursor: pointer;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-        }
 
         .notification.error {
             background: var(--error-red);
@@ -1230,14 +1214,11 @@
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
-        <div>
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Processing your menu...</div>
-        </div>
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing your menu...</div>
     </div>
 
     <!-- Notification System -->
-    <div class="notification-indicator" id="notificationIndicator" style="display: none;"></div>
     <div class="notification" id="notification"></div>
 
     <script>
@@ -1748,14 +1729,12 @@
         // Notification system
         function showNotification(message, type = 'success', duration = 3000) {
             const notification = document.getElementById('notification');
-            const indicator = document.getElementById('notificationIndicator');
             
             notification.textContent = message;
             notification.className = `notification ${type}`;
             
             // Show notification directly
             notification.classList.add('show');
-            indicator.style.display = 'none';
             
             console.log(`[${type.toUpperCase()}] ${message}`);
             
@@ -1775,13 +1754,11 @@
         // Toggle notification visibility
         function toggleNotification() {
             const notification = document.getElementById('notification');
-            const indicator = document.getElementById('notificationIndicator');
             
             if (notification.classList.contains('show')) {
                 notification.classList.remove('show');
             } else {
                 notification.classList.add('show');
-                indicator.style.display = 'none';
             }
         }
 
@@ -1996,63 +1973,17 @@
             const uploadedImage = document.getElementById('uploadedImage');
             const uploadedImagePreview = document.getElementById('uploadedImagePreview');
             
-            if (uploadedImage && uploadedImage.src && uploadedImagePreview && !uploadedImagePreview.classList.contains('hidden')) {
-                // We have an uploaded image, try to rescan it
-                console.log('Rescanning uploaded image...');
-                showNotification('🔄 Rescanning menu with AI...', 'info', 3000);
-                
-                // Get the file from the uploaded image
-                const fileInput = document.getElementById('fileInput');
-                if (fileInput && fileInput.files && fileInput.files[0]) {
-                    const file = fileInput.files[0];
-                    
-                    // Show loading overlay
-                    showLoading();
-                    
-                    // Rescan the image
-                    scanMenuImage(file).then(scanResult => {
-                        console.log('Rescan result:', scanResult);
-                        
-                        if (scanResult.success && scanResult.data && scanResult.data.dishes && scanResult.data.dishes.length > 0) {
-                            menuData = scanResult.data;
-                            hideLoading();
-                            menuProcessed = true;
-                            displayMenuResults();
-                            showNotification(`Menu rescanned successfully! (${scanResult.data.dishes.length} dishes)`, 'success');
-                        } else {
-                            // Keep existing data if rescan fails
-                            hideLoading();
-                            menuProcessed = true;
-                            displayMenuResults();
-                            showNotification('Using existing menu data. Rescan failed.', 'warning');
-                        }
-                    }).catch(error => {
-                        console.error('Rescan error:', error);
-                        hideLoading();
-                        menuProcessed = true;
-                        displayMenuResults();
-                        showNotification('Using existing menu data. Rescan error.', 'warning');
-                    });
-                } else {
-                    // No file available, use existing data
-                    showLoading();
-                    setTimeout(() => {
-                        hideLoading();
-                        menuProcessed = true;
-                        displayMenuResults();
-                        showNotification('Menu processed successfully!', 'success');
-                    }, 1000);
-                }
-            } else {
-                // No uploaded image, use existing data
-                showLoading();
-                setTimeout(() => {
-                    hideLoading();
-                    menuProcessed = true;
-                    displayMenuResults();
-                    showNotification('Menu processed successfully!', 'success');
-                }, 1000);
-            }
+            // Simply process the existing menu data
+            console.log('Processing existing menu data...');
+            showNotification('Processing menu...', 'info', 2000);
+            
+            showLoading();
+            setTimeout(() => {
+                hideLoading();
+                menuProcessed = true;
+                displayMenuResults();
+                showNotification('Menu processed successfully!', 'success');
+            }, 1000);
         }
 
         function displayMenuResults() {
@@ -2638,7 +2569,8 @@
             // Initialize upload area
             initializeUploadArea();
             
-            // Notification system is now auto-showing, no click handlers needed
+            // Set up notification click handler
+            document.getElementById('notification').addEventListener('click', toggleNotification);
             
             // Initialize with English selected
             selectLanguage('en');

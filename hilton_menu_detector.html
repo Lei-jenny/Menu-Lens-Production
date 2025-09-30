@@ -1,0 +1,2732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenuLens - AI Menu Translator & Image Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Libre+Bodoni:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --hilton-blue: #0E468B;
+            --deep-navy: #121212;
+            --soft-gray: #E9EDF2;
+            --warm-off-white: #F7F9FB;
+            --success-green: #1E824C;
+            --error-red: #DC2626;
+            --warning-orange: #B45F06;
+            --purple: #7C3AED;
+            --light-blue: #EFF6FF;
+            --light-green: #F0FDF4;
+            --light-red: #FEF2F2;
+            --light-orange: #FFF7ED;
+            --light-purple: #F3E8FF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--deep-navy);
+            background: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero Section - Lovart Style */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 80px 0 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="%23E9EDF2" opacity="0.3"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.4;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: 'Libre Bodoni', Georgia, serif;
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 700;
+            color: white;
+            margin-bottom: 24px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 48px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.7;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 80px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        /* Food Photography Background */
+        .food-cluster {
+            position: absolute;
+            top: 20%;
+            right: 10%;
+            width: 300px;
+            height: 200px;
+            opacity: 0.1;
+            z-index: 1;
+        }
+
+        .food-item {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .food-item:nth-child(1) { top: 0; left: 0; }
+        .food-item:nth-child(2) { top: 20px; left: 100px; }
+        .food-item:nth-child(3) { top: 40px; left: 200px; }
+        .food-item:nth-child(4) { top: 60px; left: 50px; }
+
+        /* Process Steps */
+        .process-steps {
+            background: white;
+            padding: 80px 0;
+            border-top: 1px solid var(--soft-gray);
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 48px;
+            margin-top: 48px;
+        }
+
+        .step {
+            text-align: center;
+            padding: 32px;
+            border-radius: 16px;
+            background: var(--warm-off-white);
+            transition: all 0.3s ease;
+        }
+
+        .step:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: var(--hilton-blue);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .step h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--deep-navy);
+        }
+
+        .step p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--warm-off-white);
+            padding: 80px 0;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--hilton-blue);
+            border-radius: 16px;
+            padding: 48px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: var(--success-green);
+            background: var(--light-green);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: var(--hilton-blue);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 32px 0;
+            flex-wrap: wrap;
+        }
+
+        .lang-btn {
+            padding: 12px 24px;
+            border: 2px solid var(--soft-gray);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .lang-btn.active {
+            border-color: var(--hilton-blue);
+            background: var(--hilton-blue);
+            color: white;
+        }
+
+        .lang-btn:hover {
+            border-color: var(--hilton-blue);
+        }
+
+        /* Menu Results */
+        .menu-results {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .results-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--deep-navy);
+            margin-bottom: 16px;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .results-header p {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .dish-card {
+            background: white;
+            border: 1px solid var(--soft-gray);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .dish-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .dish-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+
+        .dish-column {
+            padding: 24px;
+            border-radius: 12px;
+            background: var(--warm-off-white);
+        }
+
+        .dish-column.original {
+            border-left: 4px solid var(--hilton-blue);
+        }
+
+        .dish-column.translated {
+            border-left: 4px solid var(--success-green);
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            color: var(--deep-navy);
+        }
+
+        .flag-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--hilton-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .dish-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--deep-navy);
+        }
+
+        .dish-description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag.spicy { background: var(--light-red); color: var(--error-red); }
+        .tag.vegan { background: var(--light-green); color: var(--success-green); }
+        .tag.gluten-free { background: var(--light-blue); color: var(--hilton-blue); }
+        .tag.contains-pork { background: var(--light-orange); color: var(--warning-orange); }
+        .tag.contains-dairy { background: var(--light-purple); color: var(--purple); }
+        .tag.contains-eggs { background: var(--light-green); color: var(--success-green); }
+
+        .dish-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            padding: 12px 24px;
+            border: 1px solid var(--soft-gray);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            border-color: var(--hilton-blue);
+            color: var(--hilton-blue);
+        }
+
+        /* Nutrition Panel */
+        .nutrition-panel {
+            background: white;
+            border: 1px solid var(--soft-gray);
+            border-radius: 16px;
+            padding: 32px;
+            margin-top: 24px;
+            display: none;
+        }
+
+        .nutrition-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nutrition-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .nutrition-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--deep-navy);
+        }
+
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .nutrition-item {
+            text-align: center;
+            padding: 16px;
+            background: var(--warm-off-white);
+            border-radius: 12px;
+        }
+
+        .nutrition-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--hilton-blue);
+        }
+
+        .nutrition-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .health-recommendation {
+            background: var(--warm-off-white);
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid var(--hilton-blue);
+        }
+
+        .health-tag {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+
+        .health-tag.indulgent { background: var(--light-red); color: var(--error-red); }
+        .health-tag.balanced { background: var(--light-green); color: var(--success-green); }
+        .health-tag.light { background: var(--light-blue); color: var(--hilton-blue); }
+
+
+        /* Footer */
+        .footer {
+            background: var(--deep-navy);
+            color: white;
+            padding: 48px 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 60px 0 80px;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .dish-content {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .language-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .lang-btn {
+                width: 100%;
+                max-width: 200px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--hilton-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hidden class */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Enhanced Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Upload Area Enhanced */
+        .upload-area.dragover {
+            border-color: var(--success-green);
+            background: var(--light-green);
+            transform: scale(1.02);
+            box-shadow: 0 8px 32px rgba(30, 130, 76, 0.2);
+        }
+
+        .upload-area.uploading {
+            border-color: var(--hilton-blue);
+            background: var(--light-blue);
+        }
+
+        .upload-area.success {
+            border-color: var(--success-green);
+            background: var(--light-green);
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        /* Uploaded Image Preview */
+        .uploaded-image-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .uploaded-image {
+            max-width: 300px;
+            max-height: 200px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin: 10px auto;
+            display: block;
+        }
+
+        .upload-success-message {
+            color: var(--success-green);
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: var(--soft-gray);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--hilton-blue), var(--success-green));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .upload-status {
+            text-align: center;
+            margin-top: 16px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .upload-status.success {
+            color: var(--success-green);
+        }
+
+        .upload-status.error {
+            color: var(--error-red);
+        }
+
+        /* Compact Dish Layout */
+        .dish-card {
+            background: white;
+            border: 1px solid var(--soft-gray);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .dish-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        }
+
+        .dish-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .dish-column {
+            padding: 16px;
+            border-radius: 8px;
+            background: var(--warm-off-white);
+        }
+
+        .dish-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--deep-navy);
+        }
+
+        .dish-description {
+            color: #64748b;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .dish-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--hilton-blue);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--hilton-blue);
+        }
+
+        .action-btn:hover {
+            background: var(--hilton-blue);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 70, 139, 0.3);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 40px 0;
+        }
+
+        .pagination-btn {
+            padding: 12px 20px;
+            border: 2px solid var(--hilton-blue);
+            background: white;
+            color: var(--hilton-blue);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .pagination-btn:hover {
+            background: var(--hilton-blue);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pagination-info {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        /* Food Images */
+        .food-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dish-image-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dish-image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(14, 70, 139, 0.8), rgba(30, 130, 76, 0.8));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .dish-image-container:hover .dish-image-overlay {
+            opacity: 1;
+        }
+
+        .overlay-text {
+            color: white;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Loading States Enhanced */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--soft-gray);
+            border-top: 4px solid var(--hilton-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: var(--hilton-blue);
+            font-weight: 600;
+        }
+
+        /* Success Animation */
+        .success-animation {
+            animation: bounce 0.6s ease-in-out;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-green);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: var(--error-red);
+        }
+
+        /* Food Carousel */
+        .food-carousel {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 80px 0;
+            overflow: hidden;
+        }
+
+        .carousel-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .carousel-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--deep-navy);
+            margin-bottom: 16px;
+        }
+
+        .carousel-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .carousel-track {
+            display: flex;
+            animation: scroll 20s linear infinite;
+            gap: 0;
+        }
+
+        .carousel-item {
+            flex: 0 0 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .carousel-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .carousel-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-1800px); }
+        }
+
+        .carousel-container:hover .carousel-track {
+            animation-play-state: paused;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>MenuLens</h1>
+                <p class="subtitle">Upload a menu in English / 中文 / 日本語. Get instant translations, nutrition insights, and optional AI dish images.</p>
+                
+                <div class="cta-buttons">
+                    <button class="btn btn-primary" onclick="openUploadModal()">
+                        <span>📤</span>
+                        Upload Menu
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadSampleMenu()">
+                        <span>📋</span>
+                        Try Sample Menus
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Food Photography Background -->
+        <div class="food-cluster">
+            <div class="food-item">🍜</div>
+            <div class="food-item">🥟</div>
+            <div class="food-item">🥩</div>
+            <div class="food-item">🥗</div>
+        </div>
+    </section>
+
+    <!-- Process Steps -->
+    <section class="process-steps">
+        <div class="container">
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-icon">📤</div>
+                    <h3>Upload</h3>
+                    <p>Upload a photo of any restaurant menu in English, Chinese, or Japanese</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">🌐</div>
+                    <h3>Choose Language</h3>
+                    <p>Select your preferred language: English, 中文, or 日本語</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">🔍</div>
+                    <h3>Review Translations</h3>
+                    <p>Get detailed translations with nutrition insights and health recommendations</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section class="upload-section" id="uploadSection">
+        <div class="container">
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📤</div>
+                <h3>Drop your menu here or click to browse</h3>
+                <p>Supports JPG, PNG, and PDF files</p>
+                <input type="file" id="fileInput" accept="image/*,.pdf" style="display: none;" onchange="handleFileUpload(this)" title="Upload menu image file" aria-label="Upload menu image file">
+                
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                
+                <div class="upload-status" id="uploadStatus"></div>
+                
+                <div class="uploaded-image-preview hidden" id="uploadedImagePreview">
+                    <img id="uploadedImage" class="uploaded-image" alt="Uploaded menu">
+                    <div class="upload-success-message">Menu uploaded successfully!</div>
+                </div>
+            </div>
+            
+            <div class="language-selector">
+                <button class="lang-btn" data-lang="en" onclick="selectLanguage('en')">
+                    🇺🇸 English
+                </button>
+                <button class="lang-btn" data-lang="zh" onclick="selectLanguage('zh')">
+                    🇨🇳 中文
+                </button>
+                <button class="lang-btn" data-lang="ja" onclick="selectLanguage('ja')">
+                    🇯🇵 日本語
+                </button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 32px;">
+                <button class="btn btn-primary" onclick="processMenu()" id="processBtn" disabled>
+                    <span>🔄</span>
+                    Process Menu
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Results -->
+    <section class="menu-results hidden" id="menuResults">
+        <div class="container">
+            <div class="results-header">
+                <h2 id="menuTranslationsTitle">Menu Translations</h2>
+                <p id="menuTranslationsDescription">Original text on the left, translated text on the right</p>
+            </div>
+            
+            <div id="dishesContainer">
+                <!-- Dishes will be populated here -->
+            </div>
+            
+            <div class="pagination hidden" id="pagination">
+                <button class="pagination-btn" id="prevBtn" onclick="previousPage()">← Previous</button>
+                <span class="pagination-info" id="pageInfo">Page 1 of 1</span>
+                <button class="pagination-btn" id="nextBtn" onclick="nextPage()">Next →</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Food Carousel -->
+    <section class="food-carousel">
+        <div class="container">
+            <div class="carousel-header">
+                <h2>🍽️ Featured Dishes</h2>
+                <p>Discover our culinary delights</p>
+            </div>
+            
+            <div class="carousel-container">
+                <div class="carousel-track" id="carouselTrack">
+                    <div class="carousel-item">
+                        <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&h=300&fit=crop" alt="Cocktails">
+                        <div class="carousel-caption">Craft Cocktails</div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop" alt="Salads">
+                        <div class="carousel-caption">Fresh Salads</div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=400&h=300&fit=crop" alt="Pasta">
+                        <div class="carousel-caption">Italian Pasta</div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop" alt="Desserts">
+                        <div class="carousel-caption">Sweet Desserts</div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop" alt="Seafood">
+                        <div class="carousel-caption">Fresh Seafood</div>
+                    </div>
+                    <div class="carousel-item">
+                        <img src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop" alt="Burgers">
+                        <div class="carousel-caption">Gourmet Burgers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div>
+                    <p>PoC demo. No database. Three sample menus included. © 2025 Hilton.</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#">Accessibility</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms of Use</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div>
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Processing your menu...</div>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Dynamic menu data loading based on uploaded image
+        let menuData = null;
+
+        // Embedded fallback data to ensure it always works
+        const embeddedFallbackData = {
+            original: "Polish",
+            dishes: [
+                {
+                    original: "MINIONS NEW",
+                    english: "Minions Shot",
+                    chinese: "小黄人鸡尾酒",
+                    japanese: "ミニオンズショット",
+                    description: "Wyborowa Vodka, banana liqueur, milk, sour cream.",
+                    description_en: "Wyborowa Vodka, banana liqueur, milk, sour cream.",
+                    description_zh: "维波罗瓦伏特加、香蕉利口酒、牛奶、酸奶油。",
+                    description_ja: "ヴィボロワウォッカ、バナナリキュール、牛乳、サワークリーム。",
+                    tags: ["contains-dairy", "alcohol"],
+                    nutrition: { calories: 180, protein: 2, carbs: 8, fat: 4, sodium: 15, allergens: "Dairy, Alcohol" }
+                },
+                {
+                    original: "MAD BEAR",
+                    english: "Mad Bear Shot",
+                    chinese: "疯狂熊鸡尾酒",
+                    japanese: "マッドベアショット",
+                    description: "Slivovitz, tabasco, raspberry juice.",
+                    description_en: "Slivovitz, tabasco, raspberry juice.",
+                    description_zh: "李子酒、塔巴斯科辣椒酱、覆盆子汁。",
+                    description_ja: "スリボヴィッツ、タバスコ、ラズベリージュース。",
+                    tags: ["spicy", "alcohol"],
+                    nutrition: { calories: 120, protein: 0, carbs: 12, fat: 0, sodium: 5, allergens: "Alcohol" }
+                },
+                {
+                    original: "CAESAR BESTSELLER",
+                    english: "Caesar Salad",
+                    chinese: "凯撒沙拉",
+                    japanese: "シーザーサラダ",
+                    description: "Grilled romaine lettuce, bacon, Parmesan cheese, Caesar dressing, and croutons.",
+                    description_en: "Grilled romaine lettuce, bacon, Parmesan cheese, Caesar dressing, and croutons.",
+                    description_zh: "烤长叶莴苣、培根、帕尔马干酪、凯撒酱和面包丁。",
+                    description_ja: "グリルロメインレタス、ベーコン、パルメザンチーズ、シーザードレッシング、クルトン。",
+                    tags: ["contains-dairy"],
+                    nutrition: { calories: 420, protein: 22, carbs: 18, fat: 28, sodium: 850, allergens: "Dairy, Wheat" }
+                }
+            ]
+        };
+
+        let selectedLanguage = 'en';
+        let currentDishes = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let menuProcessed = false;
+
+        // Function to scan uploaded menu image with AI
+        async function scanMenuImage(file) {
+            try {
+                console.log('Scanning menu image:', file.name);
+                showNotification('🔍 Scanning menu with AI...', 'info', 3000);
+                
+                // Convert file to base64
+                const base64Data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        // Remove data URL prefix to get just the base64 data
+                        const base64 = reader.result.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                
+                console.log('Image converted to base64, length:', base64Data.length);
+                
+                // Call the scan-menu API
+                const response = await fetch('/api/scan-menu', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        imageData: base64Data,
+                        imageType: file.type || 'image/jpeg'
+                    })
+                });
+                
+                console.log('Scan API response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Scan API result:', result);
+                
+                return result;
+                
+            } catch (error) {
+                console.error('Error scanning menu image:', error);
+                return {
+                    success: false,
+                    error: `Scan failed: ${error.message}`
+                };
+            }
+        }
+
+        // Function to load menu data based on uploaded image filename
+        async function loadMenuData(filename) {
+            try {
+                console.log('Loading menu data for filename:', filename);
+                console.log('Filename lowercase:', filename.toLowerCase());
+                showNotification(`🔍 Analyzing filename: ${filename}`, 'info', 3000);
+                
+                // Determine which local file to load based on filename
+                let dataSource = '';
+                if (filename.toLowerCase().includes('menu_en') || filename.toLowerCase().includes('english')) {
+                    dataSource = './menu_en.js';
+                    console.log('✅ Matched English menu - loading local file');
+                    showNotification('📄 Loading English menu data...', 'info', 3000);
+                } else if (filename.toLowerCase().includes('menu_ja') || filename.toLowerCase().includes('japanese')) {
+                    dataSource = './menu_ja.js';
+                    console.log('✅ Matched Japanese menu - loading local file');
+                    showNotification('📄 Loading Japanese menu data...', 'info', 3000);
+                } else if (filename.toLowerCase().includes('menu_zh') || filename.toLowerCase().includes('chinese')) {
+                    dataSource = './menu_zh.js';
+                    console.log('✅ Matched Chinese menu - loading local file');
+                    showNotification('📄 Loading Chinese menu data...', 'info', 3000);
+                } else {
+                    dataSource = './menu_en.js';
+                    console.log('⚠️ No match found, using default English menu - loading local file');
+                    const warningMsg = `⚠️ Filename "${filename}" doesn't match expected patterns (menu_en, menu_ja, menu_zh). Using English menu as default.`;
+                    showNotification(warningMsg, 'warning', 5000);
+                    console.warn('Expected filename patterns:');
+                    console.warn('- menu_en.jpg, menu_english.jpg (for English menu)');
+                    console.warn('- menu_ja.jpg, menu_japanese.jpg (for Japanese menu)');
+                    console.warn('- menu_zh.jpg, menu_chinese.jpg (for Chinese menu)');
+                    console.warn('Current filename:', filename);
+                }
+                
+                console.log('Loading from local file:', dataSource);
+                showNotification(`🌐 Fetching data from: ${dataSource}`, 'info', 3000);
+                
+                // Load the local file
+                console.log('About to fetch:', dataSource);
+                console.log('Current URL:', window.location.href);
+                console.log('Full URL would be:', new URL(dataSource, window.location.href).href);
+                
+                const response = await fetch(dataSource);
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                console.log('Response URL:', response.url);
+                
+                if (!response.ok) {
+                    const errorMsg = `❌ File not found: ${dataSource} (Status: ${response.status})`;
+                    console.error(errorMsg);
+                    showNotification(errorMsg, 'error', 5000);
+                    
+                    // Explain possible reasons for file not found
+                    console.error('Possible reasons for file not found:');
+                    console.error('1. JavaScript file not uploaded to Vercel');
+                    console.error('2. File path is incorrect');
+                    console.error('3. File name mismatch');
+                    console.error('4. CORS restrictions');
+                    console.error('Required files for Vercel deployment:');
+                    console.error('- menu_en.js (for English menu)');
+                    console.error('- menu_ja.js (for Japanese menu)');
+                    console.error('- menu_zh.js (for Chinese menu)');
+                    console.error('- complete-menu-data.js (fallback)');
+                    
+                    throw new Error(`Local file not found: ${response.status}`);
+                }
+                
+                showNotification(`✅ File loaded successfully: ${dataSource}`, 'success', 3000);
+                
+                const scriptContent = await response.text();
+                console.log('Script content loaded, length:', scriptContent.length);
+                console.log('First 200 characters:', scriptContent.substring(0, 200));
+                showNotification(`📝 Script content loaded: ${scriptContent.length} characters`, 'info', 3000);
+                
+                // Execute the script to get the menuData
+                try {
+                    console.log('About to execute script content...');
+                    console.log('Script content preview:', scriptContent.substring(0, 500));
+                    console.log('Script content ends with:', scriptContent.substring(scriptContent.length - 100));
+                    console.log('Script contains const polishMenuData:', scriptContent.includes('const polishMenuData'));
+                    console.log('Script contains const:', scriptContent.includes('const'));
+                    console.log('Script contains polishMenuData:', scriptContent.includes('polishMenuData'));
+                    
+                    // Clear any existing variables first
+                    delete window.polishMenuData;
+                    delete window.sichuanMenuData;
+                    delete window.menuData;
+                    console.log('Cleared existing variables');
+                    
+                    // Modify script content to ensure global variable assignment
+                    let modifiedScript = scriptContent;
+                    if (modifiedScript.includes('const polishMenuData')) {
+                        modifiedScript = modifiedScript.replace(/const polishMenuData/g, 'window.polishMenuData');
+                        console.log('Modified script to use window.polishMenuData');
+                    }
+                    if (modifiedScript.includes('const sichuanMenuData')) {
+                        modifiedScript = modifiedScript.replace(/const sichuanMenuData/g, 'window.sichuanMenuData');
+                        console.log('Modified script to use window.sichuanMenuData');
+                    }
+                    if (modifiedScript.includes('const menuData')) {
+                        modifiedScript = modifiedScript.replace(/const menuData/g, 'window.menuData');
+                        console.log('Modified script to use window.menuData');
+                    }
+                    
+                    console.log('Modified script preview:', modifiedScript.substring(0, 200));
+                    
+                    eval(modifiedScript);
+                    console.log('Script executed successfully');
+                    showNotification('⚙️ Script executed successfully', 'success', 3000);
+                    
+                    // Immediately check what variables were created
+                    console.log('Variables immediately after eval:');
+                    console.log('- window.polishMenuData:', window.polishMenuData);
+                    console.log('- window.sichuanMenuData:', window.sichuanMenuData);
+                    console.log('- window.menuData:', window.menuData);
+                    console.log('- All window variables with "menu":', Object.keys(window).filter(key => key.toLowerCase().includes('menu')));
+                    console.log('- All window variables with "polish":', Object.keys(window).filter(key => key.toLowerCase().includes('polish')));
+                    console.log('- All window variables with "data":', Object.keys(window).filter(key => key.toLowerCase().includes('data')));
+                    
+                    // Try alternative variable access methods
+                    console.log('Alternative variable checks:');
+                    console.log('- typeof polishMenuData:', typeof polishMenuData);
+                    console.log('- typeof window.polishMenuData:', typeof window.polishMenuData);
+                    console.log('- polishMenuData directly:', polishMenuData);
+                    
+                    // Force assign to window if it exists but not in window scope
+                    if (typeof polishMenuData !== 'undefined' && !window.polishMenuData) {
+                        console.log('Assigning polishMenuData to window scope...');
+                        window.polishMenuData = polishMenuData;
+                        console.log('After assignment - window.polishMenuData:', window.polishMenuData);
+                    }
+                } catch (evalError) {
+                    const errorMsg = `❌ Script execution failed: ${evalError.message}`;
+                    console.error('Error executing script:', evalError);
+                    console.error('Error stack:', evalError.stack);
+                    showNotification(errorMsg, 'error', 5000);
+                    throw new Error('Failed to execute script content');
+                }
+                
+                // Check for different variable names used in different files
+                let loadedData = null;
+                console.log('Checking for variables:');
+                console.log('- window.polishMenuData:', window.polishMenuData);
+                console.log('- window.sichuanMenuData:', window.sichuanMenuData);
+                console.log('- window.menuData:', window.menuData);
+                showNotification('🔍 Checking for menu data variables...', 'info', 3000);
+                
+                if (window.polishMenuData) {
+                    loadedData = window.polishMenuData;
+                    console.log('✅ Found polishMenuData');
+                    showNotification('✅ Found polishMenuData variable', 'success', 3000);
+                } else if (window.sichuanMenuData) {
+                    loadedData = window.sichuanMenuData;
+                    console.log('✅ Found sichuanMenuData');
+                    showNotification('✅ Found sichuanMenuData variable', 'success', 3000);
+                } else if (window.menuData) {
+                    loadedData = window.menuData;
+                    console.log('✅ Found menuData');
+                    showNotification('✅ Found menuData variable', 'success', 3000);
+                } else {
+                    console.log('⚠️ No known variable found, trying fallback');
+                    const warningMsg = '⚠️ No menu data variables found after script execution. Expected: polishMenuData, sichuanMenuData, or menuData';
+                    showNotification(warningMsg, 'warning', 5000);
+                    console.warn('Script executed but no expected variables found:');
+                    console.warn('- Expected: window.polishMenuData');
+                    console.warn('- Expected: window.sichuanMenuData');
+                    console.warn('- Expected: window.menuData');
+                    console.warn('Available window variables:', Object.keys(window).filter(key => key.includes('Menu') || key.includes('menu')));
+                    console.warn('Script content that was executed:');
+                    console.warn(scriptContent.substring(0, 1000));
+                    console.warn('This suggests the JavaScript file may not contain the expected variable declarations');
+                    console.warn('FULL SCRIPT CONTENT:');
+                    console.warn(scriptContent);
+                    console.warn('Script content length:', scriptContent.length);
+                    console.warn('Does script contain "polishMenuData"?', scriptContent.includes('polishMenuData'));
+                    console.warn('Does script contain "sichuanMenuData"?', scriptContent.includes('sichuanMenuData'));
+                    console.warn('Does script contain "menuData"?', scriptContent.includes('menuData'));
+                    loadedData = menuData;
+                }
+                
+                console.log('Menu data loaded:', loadedData);
+                console.log('Number of dishes:', loadedData ? loadedData.dishes.length : 'No dishes');
+                console.log('Data structure keys:', loadedData ? Object.keys(loadedData) : 'No data');
+                console.log('First dish sample:', loadedData && loadedData.dishes ? loadedData.dishes[0] : 'No dishes');
+                showNotification(`📊 Data validation: ${loadedData ? loadedData.dishes.length : 0} dishes found`, 'info', 3000);
+                
+                // Validate the loaded data
+                if (!loadedData || !loadedData.dishes || loadedData.dishes.length === 0) {
+                    const errorMsg = `❌ Data validation failed: ${loadedData ? loadedData.dishes.length : 0} dishes found`;
+                    console.error('❌ Data validation failed:');
+                    console.error('- loadedData exists:', !!loadedData);
+                    console.error('- dishes exists:', loadedData ? !!loadedData.dishes : false);
+                    console.error('- dishes length:', loadedData ? loadedData.dishes.length : 0);
+                    showNotification(errorMsg, 'error', 5000);
+                    throw new Error('Invalid menu data structure');
+                }
+                
+                console.log('✅ Local data loaded successfully:', loadedData.dishes.length, 'dishes');
+                showNotification(`Local menu data loaded! (${loadedData.dishes.length} dishes)`, 'success');
+                
+                return loadedData;
+            } catch (error) {
+                const errorMsg = `❌ Local data loading failed: ${error.message}`;
+                console.error('Error loading local menu data:', error);
+                console.error('Error details:', error.message);
+                console.error('Stack trace:', error.stack);
+                showNotification(errorMsg, 'error', 5000);
+                
+                // Try to load fallback data
+                try {
+                    console.log('Attempting to load fallback data from complete-menu-data.js...');
+                    showNotification('🔄 Trying fallback data source...', 'info', 3000);
+                    const fallbackResponse = await fetch('./complete-menu-data.js');
+                    if (fallbackResponse.ok) {
+                        const fallbackContent = await fallbackResponse.text();
+                        eval(fallbackContent);
+                        
+                        let fallbackData = null;
+                        if (window.polishMenuData) {
+                            fallbackData = window.polishMenuData;
+                            console.log('✅ Found polishMenuData in fallback file');
+                            showNotification('✅ Found polishMenuData in fallback', 'success', 3000);
+                        } else if (window.sichuanMenuData) {
+                            fallbackData = window.sichuanMenuData;
+                            console.log('✅ Found sichuanMenuData in fallback file');
+                            showNotification('✅ Found sichuanMenuData in fallback', 'success', 3000);
+                        }
+                        
+                        if (fallbackData && fallbackData.dishes && fallbackData.dishes.length > 0) {
+                            console.log('✅ Fallback data loaded successfully:', fallbackData.dishes.length, 'dishes');
+                            showNotification(`✅ Using fallback menu data (${fallbackData.dishes.length} dishes)`, 'success', 5000);
+                            return fallbackData;
+                        } else {
+                            showNotification('❌ Fallback data validation failed', 'error', 5000);
+                        }
+                    } else {
+                        const fallbackErrorMsg = `❌ Fallback file not found: complete-menu-data.js (Status: ${fallbackResponse.status})`;
+                        showNotification(fallbackErrorMsg, 'error', 5000);
+                        console.error('Fallback file missing - this means:');
+                        console.error('1. complete-menu-data.js was not uploaded to Vercel');
+                        console.error('2. File path is incorrect');
+                        console.error('3. This is a critical fallback file that should always be present');
+                    }
+                } catch (fallbackError) {
+                    const fallbackErrorMsg = `❌ Fallback loading failed: ${fallbackError.message}`;
+                    console.error('Fallback data loading failed:', fallbackError);
+                    showNotification(fallbackErrorMsg, 'error', 5000);
+                }
+                
+                // Use embedded fallback data as final fallback
+                console.log('⚠️ All external data loading failed, using embedded fallback data...');
+                console.log('Embedded data dishes count:', embeddedFallbackData.dishes.length);
+                showNotification('⚠️ Using embedded sample data (3 dishes) - External data unavailable', 'warning', 5000);
+                return embeddedFallbackData;
+            }
+        }
+
+        // Language mapping
+        const languageMap = {
+            'en': { name: 'English', flag: '🇺🇸', key: 'english', original: 'Original' },
+            'zh': { name: '中文', flag: '🇨🇳', key: 'chinese', original: '原文' },
+            'ja': { name: '日本語', flag: '🇯🇵', key: 'japanese', original: 'げんぶん' }
+        };
+
+        // Translation functions
+        function getTranslation(key) {
+            const translations = {
+                'en': {
+                    'viewNutrition': 'View Nutrition',
+                    'generateAI': 'Generate AI Image',
+                    'calories': 'Calories',
+                    'protein': 'Protein',
+                    'carbs': 'Carbs',
+                    'fat': 'Fat',
+                    'sodium': 'Sodium',
+                    'allergens': 'Allergens',
+                    'spicy': 'Spicy',
+                    'containsPork': 'Contains Pork',
+                    'containsDairy': 'Contains Dairy',
+                    'containsSeafood': 'Contains Seafood',
+                    'alcohol': 'Alcohol',
+                    'vegetarian': 'Vegetarian',
+                    'vegan': 'Vegan',
+                    'glutenFree': 'Gluten Free',
+                    'nutFree': 'Nut Free',
+                    'containsEggs': 'Contains Eggs',
+                    'containsBeef': 'Contains Beef',
+                    'containsSeafood': 'Contains Seafood',
+                    'containsGluten': 'Contains Gluten',
+                    'containsNuts': 'Contains Nuts',
+                    'indulgent': 'Indulgent',
+                    'balanced': 'Balanced',
+                    'light': 'Light',
+                    'healthTip1': 'This is a hearty dish perfect for special occasions.',
+                    'healthTip2': 'A well-balanced meal with good nutritional value.',
+                    'healthTip3': 'A light and healthy option for everyday dining.',
+                    'disclaimer': 'Estimates only. Not medical advice.',
+                    'menuTranslations': 'Menu Translations',
+                    'menuDescription': 'Original text on the left, translated text on the right'
+                },
+                'zh': {
+                    'viewNutrition': '查看营养',
+                    'generateAI': '生成AI图片',
+                    'calories': '卡路里',
+                    'protein': '蛋白质',
+                    'carbs': '碳水化合物',
+                    'fat': '脂肪',
+                    'sodium': '钠',
+                    'allergens': '过敏原',
+                    'spicy': '辣',
+                    'containsPork': '含猪肉',
+                    'containsDairy': '含乳制品',
+                    'containsSeafood': '含海鲜',
+                    'alcohol': '酒精',
+                    'vegetarian': '素食',
+                    'vegan': '纯素',
+                    'glutenFree': '无麸质',
+                    'nutFree': '无坚果',
+                    'containsEggs': '含鸡蛋',
+                    'containsBeef': '含牛肉',
+                    'containsSeafood': '含海鲜',
+                    'containsGluten': '含麸质',
+                    'containsNuts': '含坚果',
+                    'indulgent': '丰盛',
+                    'balanced': '均衡',
+                    'light': '清淡',
+                    'healthTip1': '这是一道丰盛的菜肴，非常适合特殊场合。',
+                    'healthTip2': '营养均衡的餐食，具有很好的营养价值。',
+                    'healthTip3': '清淡健康的选择，适合日常用餐。',
+                    'disclaimer': '仅供参考。非医疗建议。',
+                    'menuTranslations': '菜单翻译',
+                    'menuDescription': '左侧原文，右侧翻译'
+                },
+                'ja': {
+                    'viewNutrition': '栄養情報',
+                    'generateAI': 'AI画像生成',
+                    'calories': 'カロリー',
+                    'protein': 'タンパク質',
+                    'carbs': '炭水化物',
+                    'fat': '脂肪',
+                    'sodium': 'ナトリウム',
+                    'allergens': 'アレルゲン',
+                    'spicy': '辛い',
+                    'containsPork': '豚肉含有',
+                    'containsDairy': '乳製品含有',
+                    'containsSeafood': '魚介類含有',
+                    'alcohol': 'アルコール',
+                    'vegetarian': 'ベジタリアン',
+                    'vegan': 'ビーガン',
+                    'glutenFree': 'グルテンフリー',
+                    'nutFree': 'ナッツフリー',
+                    'containsEggs': '卵含有',
+                    'containsBeef': '牛肉含有',
+                    'containsSeafood': '魚介類含有',
+                    'containsGluten': 'グルテン含有',
+                    'containsNuts': 'ナッツ含有',
+                    'indulgent': '贅沢',
+                    'balanced': 'バランス',
+                    'light': '軽い',
+                    'healthTip1': '特別な機会に最適な、心のこもった料理です。',
+                    'healthTip2': '栄養価の高い、バランスの取れた食事です。',
+                    'healthTip3': '日常の食事に適した、軽くて健康的な選択肢です。',
+                    'disclaimer': '推定値のみ。医療アドバイスではありません。',
+                    'menuTranslations': 'メニュー翻訳',
+                    'menuDescription': '左側原文、右側翻訳'
+                }
+            };
+            return translations[selectedLanguage]?.[key] || translations['en'][key];
+        }
+
+        // Enhanced upload functionality
+        function initializeUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    // Create a mock input element for drag-and-drop
+                    const mockInput = { files: files };
+                    handleFileUpload(mockInput);
+                }
+            });
+        }
+
+        // Notification system
+        function showNotification(message, type = 'success', duration = 5000) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            
+            // Clear any existing timeout
+            if (notification.timeoutId) {
+                clearTimeout(notification.timeoutId);
+            }
+            
+            // Set new timeout
+            notification.timeoutId = setTimeout(() => {
+                notification.classList.remove('show');
+                // Clean up timeout reference
+                delete notification.timeoutId;
+            }, duration);
+        }
+
+        // Loading overlay
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function selectLanguage(lang) {
+            selectedLanguage = lang;
+            
+            // Update button states
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
+            
+            // Enable process button
+            document.getElementById('processBtn').disabled = false;
+            
+            // Update menu section header with animation
+            updateMenuHeader();
+            
+            // Only refresh display if menu has been processed
+            if (menuProcessed && menuData && menuData.dishes) {
+                displayMenuResults();
+            }
+        }
+
+        function updateMenuHeader() {
+            const titleElement = document.getElementById('menuTranslationsTitle');
+            const descriptionElement = document.getElementById('menuTranslationsDescription');
+            
+            if (titleElement && descriptionElement) {
+                // Add fade out animation
+                titleElement.style.opacity = '0';
+                descriptionElement.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // Update content
+                    titleElement.textContent = getTranslation('menuTranslations');
+                    descriptionElement.textContent = getTranslation('menuDescription');
+                    
+                    // Add fade in animation
+                    titleElement.style.opacity = '1';
+                    descriptionElement.style.opacity = '1';
+                }, 200);
+            }
+        }
+
+        function handleFileUpload(input) {
+            console.log('handleFileUpload called with:', input);
+            const file = input.files[0];
+            console.log('File object:', file);
+            if (file) {
+                console.log('File selected:', file.name);
+                
+                // Show upload progress
+                const uploadArea = document.getElementById('uploadArea');
+                const progressContainer = document.getElementById('progressContainer');
+                const progressBar = document.getElementById('progressBar');
+                const uploadStatus = document.getElementById('uploadStatus');
+                const uploadedImagePreview = document.getElementById('uploadedImagePreview');
+                const uploadedImage = document.getElementById('uploadedImage');
+                
+                uploadArea.classList.add('uploading');
+                progressContainer.style.display = 'block';
+                uploadStatus.style.display = 'block';
+                uploadStatus.textContent = 'Uploading...';
+                
+                // Create file reader to show image preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                // Simulate upload progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 30;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        
+                        // Upload complete
+                        uploadArea.classList.remove('uploading');
+                        uploadArea.classList.add('success');
+                        uploadStatus.textContent = 'Upload successful!';
+                        uploadStatus.classList.add('success');
+                        
+                        // Show image preview
+                        uploadedImagePreview.classList.remove('hidden');
+                        
+                        // Scan the uploaded image with AI
+                        scanMenuImage(file).then(scanResult => {
+                            console.log('Menu scan result:', scanResult);
+                            
+                            if (scanResult.success && scanResult.data && scanResult.data.dishes && scanResult.data.dishes.length > 0) {
+                                menuData = scanResult.data;
+                                // Enable process button
+                                document.getElementById('processBtn').disabled = false;
+                                
+                                // Show success notification
+                                showNotification(`Menu scanned successfully! (${scanResult.data.dishes.length} dishes)`, 'success');
+                                
+                                // Auto scroll to upload section to show the uploaded image
+                                setTimeout(() => {
+                                    document.getElementById('uploadSection').scrollIntoView({ 
+                                        behavior: 'smooth',
+                                        block: 'center'
+                                    });
+                                }, 500);
+                            } else if (scanResult.error) {
+                                console.log('Menu scan error:', scanResult.error);
+                                showNotification(`Menu scan failed: ${scanResult.error}. Using sample data.`, 'warning');
+                                
+                                // Fallback to sample data
+                                loadMenuData('Menu_en.jpg').then(loadedData => {
+                                    if (loadedData && loadedData.dishes && loadedData.dishes.length > 0) {
+                                        menuData = loadedData;
+                                        document.getElementById('processBtn').disabled = false;
+                                        showNotification(`Using sample menu data (${loadedData.dishes.length} dishes)`, 'info');
+                                    }
+                                });
+                            } else {
+                                console.error('Menu scan validation failed:', scanResult);
+                                showNotification('Error: Menu scan failed. Using sample data.', 'error');
+                                
+                                // Fallback to sample data
+                                loadMenuData('Menu_en.jpg').then(loadedData => {
+                                    if (loadedData && loadedData.dishes && loadedData.dishes.length > 0) {
+                                        menuData = loadedData;
+                                        document.getElementById('processBtn').disabled = false;
+                                        showNotification(`Using sample menu data (${loadedData.dishes.length} dishes)`, 'info');
+                                    }
+                                });
+                            }
+                        }).catch(error => {
+                            console.error('Error scanning menu:', error);
+                            showNotification('Error scanning menu. Using sample data.', 'error');
+                            
+                            // Fallback to sample data
+                            loadMenuData('Menu_en.jpg').then(loadedData => {
+                                if (loadedData && loadedData.dishes && loadedData.dishes.length > 0) {
+                                    menuData = loadedData;
+                                    document.getElementById('processBtn').disabled = false;
+                                    showNotification(`Using sample menu data (${loadedData.dishes.length} dishes)`, 'info');
+                                }
+                            });
+                        });
+                        
+                        // Reset progress bar after 2 seconds
+                        setTimeout(() => {
+                            uploadArea.classList.remove('success');
+                            progressContainer.style.display = 'none';
+                            uploadStatus.style.display = 'none';
+                            uploadStatus.classList.remove('success');
+                        }, 2000);
+                    }
+                    progressBar.style.width = progress + '%';
+                }, 200);
+            }
+        }
+
+        function openUploadModal() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function loadSampleMenu() {
+            // Load sample English menu data
+            try {
+                showNotification('Loading sample menu...', 'info');
+                console.log('Loading sample menu data...');
+                menuData = await loadMenuData('Menu_en.jpg'); // Load English sample data
+                
+                console.log('Sample menu data result:', menuData);
+                
+                if (menuData && menuData.dishes && menuData.dishes.length > 0) {
+                    document.getElementById('processBtn').disabled = false;
+                    showNotification(`Sample menu loaded successfully! (${menuData.dishes.length} dishes)`, 'success');
+                    
+                    // Auto scroll to upload section
+                    setTimeout(() => {
+                        document.getElementById('uploadSection').scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }, 500);
+                } else {
+                    console.error('Sample menu data validation failed:', menuData);
+                    showNotification('Error: Sample menu data is invalid or empty. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading sample menu:', error);
+                showNotification('Error loading sample menu. Please try again.', 'error');
+            }
+        }
+
+        function processMenu() {
+            // Check if menu data is loaded
+            if (!menuData || !menuData.dishes) {
+                showNotification('Menu data not loaded. Please upload an image or try "Try Sample Menus" first!', 'error');
+                return;
+            }
+            
+            // Show loading overlay
+            showLoading();
+            
+            // Simulate processing delay with progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 20;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    
+                    // Hide loading and show results
+                    hideLoading();
+                    menuProcessed = true; // Mark menu as processed
+                    displayMenuResults();
+                    showNotification('Menu processed successfully!', 'success');
+                }
+            }, 300);
+        }
+
+        function displayMenuResults() {
+            if (!menuData || !menuData.dishes) {
+                showNotification('Menu data not loaded. Please upload a file first.', 'error');
+                return;
+            }
+            
+            currentDishes = menuData.dishes;
+            currentPage = 1;
+            
+            // Show results section
+            document.getElementById('menuResults').classList.remove('hidden');
+            
+            // Render dishes with pagination
+            renderDishes();
+            
+            // Update pagination
+            updatePagination();
+
+            // Scroll to results
+            document.getElementById('menuResults').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderDishes() {
+            const dishesContainer = document.getElementById('dishesContainer');
+            dishesContainer.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const dishesToShow = currentDishes.slice(startIndex, endIndex);
+
+            dishesToShow.forEach((dish, index) => {
+                const globalIndex = startIndex + index;
+                const dishCard = createDishCard(dish, globalIndex);
+                dishesContainer.appendChild(dishCard);
+            });
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(currentDishes.length / itemsPerPage);
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pagination = document.getElementById('pagination');
+
+            if (totalPages > 1) {
+                pagination.classList.remove('hidden');
+                pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+                prevBtn.disabled = currentPage === 1;
+                nextBtn.disabled = currentPage === totalPages;
+            } else {
+                pagination.classList.add('hidden');
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderDishes();
+                updatePagination();
+                document.getElementById('menuResults').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(currentDishes.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderDishes();
+                updatePagination();
+                document.getElementById('menuResults').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function createDishCard(dish, index) {
+            const card = document.createElement('div');
+            card.className = 'dish-card';
+            
+            const originalLang = languageMap['en'];
+            const translatedLang = languageMap[selectedLanguage];
+            
+            card.innerHTML = `
+                <div class="dish-content">
+                    <div class="dish-column original">
+                        <div class="column-header">
+                            <div class="flag-icon">${originalLang.flag}</div>
+                            <span>${languageMap[selectedLanguage].original}</span>
+                        </div>
+                        <div class="dish-title">${dish.original}</div>
+                        <div class="dish-description">${dish.description_en || dish.description}</div>
+                        <div class="tags">
+                            ${dish.tags.map(tag => `<span class="tag ${tag}">${getTagLabel(tag)}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="dish-column translated">
+                        <div class="column-header">
+                            <div class="flag-icon">${translatedLang.flag}</div>
+                            <span>${translatedLang.name} (Translation)</span>
+                        </div>
+                        <div class="dish-title">${dish[translatedLang.key]}</div>
+                        <div class="dish-description">${getDishDescription(dish, selectedLanguage)}</div>
+                        <div class="tags">
+                            ${dish.tags.map(tag => `<span class="tag ${tag}">${getTagLabel(tag)}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="dish-actions">
+                    <button class="action-btn" onclick="showNutrition(${index})">
+                        <span>📊</span>
+                        ${getTranslation('viewNutrition')}
+                    </button>
+                    <button class="action-btn" onclick="generateAIImage(${index})">
+                        <span>🎨</span>
+                        ${getTranslation('generateAI')}
+                    </button>
+                </div>
+                <div class="nutrition-panel" id="nutrition-${index}">
+                    <div class="nutrition-header">
+                        <h3 class="nutrition-title">${getTranslation('viewNutrition')}: ${dish[originalLang.key]}</h3>
+                    </div>
+                    <div class="nutrition-grid">
+                        <div class="nutrition-item">
+                            <div class="nutrition-value">${dish.nutrition.calories}</div>
+                            <div class="nutrition-label">${getTranslation('calories')}</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value">${dish.nutrition.protein}g</div>
+                            <div class="nutrition-label">${getTranslation('protein')}</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value">${dish.nutrition.carbs}g</div>
+                            <div class="nutrition-label">${getTranslation('carbs')}</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value">${dish.nutrition.fat}g</div>
+                            <div class="nutrition-label">${getTranslation('fat')}</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value">${dish.nutrition.sodium}mg</div>
+                            <div class="nutrition-label">${getTranslation('sodium')}</div>
+                        </div>
+                        <div class="nutrition-item">
+                            <div class="nutrition-value">${dish.nutrition.allergens}</div>
+                            <div class="nutrition-label">${getTranslation('allergens')}</div>
+                        </div>
+                    </div>
+                    <div class="health-recommendation">
+                        <div class="health-tag ${getHealthTag(dish.nutrition.calories)}">${getHealthTag(dish.nutrition.calories)}</div>
+                        <p>${getHealthRecommendation(dish.nutrition.calories, dish.nutrition.protein, dish.nutrition.fat)}</p>
+                        <p style="font-size: 0.875rem; color: #64748b; margin-top: 12px;">${getTranslation('disclaimer')}</p>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function getTagLabel(tag) {
+            const tagLabels = {
+                'spicy': `🌶️ ${getTranslation('spicy')}`,
+                'vegan': `🌱 ${getTranslation('vegan')}`,
+                'vegetarian': `🥬 ${getTranslation('vegetarian')}`,
+                'gluten-free': `✅ ${getTranslation('glutenFree')}`,
+                'contains-pork': `🐷 ${getTranslation('containsPork')}`,
+                'contains-dairy': `🥛 ${getTranslation('containsDairy')}`,
+                'contains-eggs': `🥚 ${getTranslation('containsEggs')}`,
+                'contains-beef': `🐄 ${getTranslation('containsBeef')}`,
+                'contains-seafood': `🐟 ${getTranslation('containsSeafood')}`,
+                'contains-gluten': `🌾 ${getTranslation('containsGluten')}`,
+                'contains-nuts': `🥜 ${getTranslation('containsNuts')}`,
+                'alcohol': `🍷 ${getTranslation('alcohol')}`
+            };
+            return tagLabels[tag] || tag;
+        }
+
+        function getHealthTag(calories) {
+            if (calories > 500) return getTranslation('indulgent');
+            if (calories > 300) return getTranslation('balanced');
+            return getTranslation('light');
+        }
+
+        function getHealthRecommendation(calories, protein, fat) {
+            if (calories > 500) {
+                return getTranslation('healthTip1');
+            } else if (calories > 300) {
+                return getTranslation('healthTip2');
+            } else {
+                return getTranslation('healthTip3');
+            }
+        }
+
+        function showNutrition(index) {
+            const nutritionPanel = document.getElementById(`nutrition-${index}`);
+            const isActive = nutritionPanel.classList.contains('active');
+            
+            // Close all other panels
+            document.querySelectorAll('.nutrition-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            if (!isActive) {
+                nutritionPanel.classList.add('active');
+            }
+        }
+
+        async function generateAIImage(index) {
+            const dish = currentDishes[index];
+            if (!dish) {
+                showNotification('Dish not found', 'error');
+                return;
+            }
+
+            // 始终使用原始语言进行搜索，确保准确性
+            let dishName = dish.original;
+
+            // 显示加载状态
+            const button = document.querySelector(`[onclick="generateAIImage(${index})"]`);
+            const originalText = button.textContent;
+            button.textContent = '生成中...';
+            button.disabled = true;
+
+            // 使用Unsplash API获取相关食物图片
+            console.log('Searching for food image:', dishName, 'in language:', selectedLanguage);
+            
+            try {
+                // 使用原始语言文本进行搜索，确保准确性
+                let searchQuery = '';
+                
+                // 分析菜品类型并添加相关关键词
+                const dishType = analyzeDishType(dishName);
+                console.log('Detected dish type:', dishType);
+                
+                // 始终使用原始语言进行搜索，确保搜索结果一致
+                // 根据原始语言文本的语言类型添加相应关键词
+                const originalLanguage = detectLanguage(dishName);
+                console.log('Detected original language:', originalLanguage);
+                
+                if (originalLanguage === 'zh') {
+                    searchQuery = dishName + ' ' + dishType.chinese + ' 菜品 美食';
+                } else if (originalLanguage === 'ja') {
+                    searchQuery = dishName + ' ' + dishType.japanese + ' 料理 食べ物';
+                } else {
+                    searchQuery = dishName + ' ' + dishType.english + ' dish food';
+                }
+                
+                console.log('Optimized search query:', searchQuery);
+                
+                // 使用AI图片生成服务
+                console.log('Generating AI image for:', dishName);
+                
+                // 构建AI提示词，包含成分信息
+                let prompt = '';
+                const description = dish.description_en || dish.description || '';
+                
+                if (originalLanguage === 'zh') {
+                    prompt = `${dishName} ${dishType.chinese} 美食 高清 专业摄影 餐厅菜品 精美摆盘`;
+                } else if (originalLanguage === 'ja') {
+                    prompt = `${dishName} ${dishType.japanese} 料理 高品質 プロの写真 レストラン料理 美しい盛り付け`;
+                } else {
+                    prompt = `${dishName} ${dishType.english} food, high quality, professional photography, restaurant dish, beautiful plating`;
+                }
+                
+                // 如果有成分描述，添加到prompt中
+                if (description) {
+                    prompt += ` 成分：${description}`;
+                }
+                
+                console.log('AI generation prompt:', prompt);
+                console.log('Final prompt length:', prompt.length);
+                console.log('Description included:', description ? 'Yes' : 'No');
+                
+                // 通过Vercel Serverless Function代理Gemini API请求
+                const requestBody = {
+                    prompt: prompt
+                };
+                
+                console.log('Request body being sent:', JSON.stringify(requestBody, null, 2));
+                
+                const geminiResponse = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (geminiResponse.ok) {
+                    const result = await geminiResponse.json();
+                    console.log('Gemini API response:', result);
+                    
+                    if (result.data && result.data.length > 0) {
+                        // 选择第一张图片
+                        const imageUrl = result.data[0].url;
+                        showAIImageModal(imageUrl, dishName + ' (AI生成)');
+                        showNotification('AI图片生成成功', 'success');
+                    } else {
+                        throw new Error('No images generated');
+                    }
+                } else {
+                    throw new Error('Gemini API failed');
+                }
+            } catch (geminiError) {
+                console.log('Gemini API failed, using fallback');
+                // 最终备用方案 - 使用多个备用菜品图片
+                const fallbackImages = [
+                    'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=512&h=512&fit=crop&crop=center&auto=format&q=80', // 汉堡
+                    'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=512&h=512&fit=crop&crop=center&auto=format&q=80', // 意大利面
+                    'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=512&h=512&fit=crop&crop=center&auto=format&q=80', // 沙拉
+                    'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=512&h=512&fit=crop&crop=center&auto=format&q=80', // 寿司
+                    'https://images.unsplash.com/photo-1563379091339-03246963d4b8?w=512&h=512&fit=crop&crop=center&auto=format&q=80'  // 中餐
+                ];
+                const randomImage = fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+                showAIImageModal(randomImage, dishName + ' (示例图片)');
+                showNotification('显示示例图片', 'info');
+            } finally {
+                // 恢复按钮状态
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        function showAIImageModal(imageUrl, dishName) {
+            // 创建模态框
+            const modal = document.createElement('div');
+            modal.className = 'ai-image-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                animation: fadeIn 0.3s ease;
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    border-radius: 16px;
+                    padding: 24px;
+                    max-width: 90%;
+                    max-height: 90%;
+                    position: relative;
+                    animation: slideIn 0.3s ease;
+                ">
+                    <button onclick="this.closest('.ai-image-modal').remove()" style="
+                        position: absolute;
+                        top: 12px;
+                        right: 12px;
+                        background: #ef4444;
+                        color: white;
+                        border: none;
+                        border-radius: 50%;
+                        width: 32px;
+                        height: 32px;
+                        cursor: pointer;
+                        font-size: 18px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">×</button>
+                    <h3 style="margin: 0 0 16px 0; color: #1f2937; text-align: center;">${dishName}</h3>
+                    <img src="${imageUrl}" alt="${dishName}" style="
+                        max-width: 100%;
+                        max-height: 70vh;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    ">
+                    <div style="text-align: center; margin-top: 16px;">
+                        <button onclick="downloadImage('${imageUrl}', '${dishName}')" style="
+                            background: var(--hilton-blue);
+                            color: white;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            margin-right: 8px;
+                        ">下载图片</button>
+                        <button onclick="this.closest('.ai-image-modal').remove()" style="
+                            background: #6b7280;
+                            color: white;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                        ">关闭</button>
+                    </div>
+                </div>
+            `;
+
+            // 添加CSS动画
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideIn {
+                    from { transform: scale(0.8); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+
+            document.body.appendChild(modal);
+
+            // 点击背景关闭
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        function downloadImage(imageUrl, dishName) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `${dishName}_AI_generated.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 根据选择语言获取菜品描述
+        function getDishDescription(dish, language) {
+            if (language === 'zh' && dish.description_zh) {
+                return dish.description_zh;
+            } else if (language === 'ja' && dish.description_ja) {
+                return dish.description_ja;
+            } else if (language === 'en' && dish.description_en) {
+                return dish.description_en;
+            }
+            // 如果没有对应语言的描述，返回默认描述
+            return dish.description || dish.description_en || 'No description available';
+        }
+
+        // 检测文本语言类型
+        function detectLanguage(text) {
+            // 检测中文字符
+            if (/[\u4e00-\u9fff]/.test(text)) {
+                return 'zh';
+            }
+            // 检测日文字符（平假名、片假名、汉字）
+            if (/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]/.test(text)) {
+                return 'ja';
+            }
+            // 默认为英文
+            return 'en';
+        }
+
+        // 分析菜品类型，提供更精确的搜索关键词
+        function analyzeDishType(dishName) {
+            const name = dishName.toLowerCase();
+            
+            // 酒类检测 - 最高优先级，避免被误认为肉类
+            if (name.includes('wine') || name.includes('酒') || name.includes('ワイン') || 
+                name.includes('beer') || name.includes('啤酒') || name.includes('ビール') ||
+                name.includes('cocktail') || name.includes('鸡尾酒') || name.includes('カクテル') ||
+                name.includes('whiskey') || name.includes('威士忌') || name.includes('ウィスキー') ||
+                name.includes('sake') || name.includes('清酒') || name.includes('日本酒') ||
+                name.includes('vodka') || name.includes('伏特加') || name.includes('ウォッカ') ||
+                name.includes('rum') || name.includes('朗姆酒') || name.includes('ラム') ||
+                name.includes('gin') || name.includes('金酒') || name.includes('ジン') ||
+                name.includes('tequila') || name.includes('龙舌兰') || name.includes('テキーラ') ||
+                name.includes('champagne') || name.includes('香槟') || name.includes('シャンパン') ||
+                name.includes('brandy') || name.includes('白兰地') || name.includes('ブランデー') ||
+                name.includes('liqueur') || name.includes('利口酒') || name.includes('リキュール') ||
+                name.includes('alcohol') || name.includes('酒精') || name.includes('アルコール')) {
+                return {
+                    english: 'alcoholic drink beverage cocktail',
+                    chinese: '酒类 饮品 酒精',
+                    japanese: '酒 飲み物 アルコール'
+                };
+            }
+            
+            // 川菜/辣菜检测 - 第二优先级
+            if (name.includes('水煮') || name.includes('麻辣') || name.includes('川菜') || 
+                name.includes('辣') || name.includes('麻婆') || name.includes('宫保') ||
+                name.includes('回锅') || name.includes('口水') || name.includes('酸菜鱼') ||
+                name.includes('剁椒') || name.includes('干锅') || name.includes('毛血旺') ||
+                name.includes('spicy') || name.includes('hot') || name.includes('sichuan')) {
+                return {
+                    english: 'sichuan spicy dish food',
+                    chinese: '川菜 辣菜 美食',
+                    japanese: '四川料理 辛い料理'
+                };
+            }
+            
+            // 汤类检测
+            if (name.includes('soup') || name.includes('汤') || name.includes('スープ') ||
+                name.includes('broth') || name.includes('汤') || name.includes('汁')) {
+                return {
+                    english: 'soup bowl',
+                    chinese: '汤类 汤品',
+                    japanese: 'スープ 汁物'
+                };
+            }
+            
+            // 面类检测
+            if (name.includes('noodle') || name.includes('面') || name.includes('麺') ||
+                name.includes('pasta') || name.includes('意大利面') || name.includes('パスタ') ||
+                name.includes('ramen') || name.includes('拉面') || name.includes('ラーメン')) {
+                return {
+                    english: 'noodle pasta dish',
+                    chinese: '面条 面食',
+                    japanese: '麺類 パスタ'
+                };
+            }
+            
+            // 肉类检测 - 排除酒类关键词
+            if ((name.includes('beef') || name.includes('牛肉') || name.includes('牛肉') ||
+                name.includes('pork') || name.includes('猪肉') || name.includes('豚肉') ||
+                name.includes('chicken') || name.includes('鸡肉') || name.includes('鶏肉') ||
+                name.includes('lamb') || name.includes('羊肉') || name.includes('羊肉') ||
+                name.includes('duck') || name.includes('鸭肉') || name.includes('鴨肉') ||
+                name.includes('turkey') || name.includes('火鸡') || name.includes('七面鳥')) &&
+                !name.includes('wine') && !name.includes('酒') && !name.includes('ワイン') &&
+                !name.includes('beer') && !name.includes('啤酒') && !name.includes('ビール') &&
+                !name.includes('cocktail') && !name.includes('鸡尾酒') && !name.includes('カクテル')) {
+                return {
+                    english: 'meat dish protein',
+                    chinese: '肉类 荤菜',
+                    japanese: '肉料理 メイン'
+                };
+            }
+            
+            // 海鲜检测 - 排除酒类关键词
+            if ((name.includes('fish') || name.includes('鱼') || name.includes('魚') ||
+                name.includes('shrimp') || name.includes('虾') || name.includes('エビ') ||
+                name.includes('crab') || name.includes('蟹') || name.includes('カニ') ||
+                name.includes('lobster') || name.includes('龙虾') || name.includes('ロブスター') ||
+                name.includes('salmon') || name.includes('三文鱼') || name.includes('サーモン') ||
+                name.includes('tuna') || name.includes('金枪鱼') || name.includes('マグロ')) &&
+                !name.includes('wine') && !name.includes('酒') && !name.includes('ワイン') &&
+                !name.includes('beer') && !name.includes('啤酒') && !name.includes('ビール')) {
+                return {
+                    english: 'seafood fish dish',
+                    chinese: '海鲜 鱼类',
+                    japanese: '魚介類 シーフード'
+                };
+            }
+            
+            // 蔬菜检测
+            if (name.includes('salad') || name.includes('沙拉') || name.includes('サラダ') ||
+                name.includes('vegetable') || name.includes('蔬菜') || name.includes('野菜') ||
+                name.includes('green') || name.includes('青菜') || name.includes('青菜')) {
+                return {
+                    english: 'vegetable salad healthy',
+                    chinese: '蔬菜 素食',
+                    japanese: '野菜 サラダ'
+                };
+            }
+            
+            // 甜点检测
+            if (name.includes('dessert') || name.includes('甜点') || name.includes('デザート') ||
+                name.includes('cake') || name.includes('蛋糕') || name.includes('ケーキ') ||
+                name.includes('ice cream') || name.includes('冰淇淋') || name.includes('アイスクリーム')) {
+                return {
+                    english: 'dessert sweet treat',
+                    chinese: '甜点 甜品',
+                    japanese: 'デザート スイーツ'
+                };
+            }
+            
+            // 默认返回通用关键词
+            return {
+                english: 'food dish meal',
+                chinese: '食物 菜品',
+                japanese: '料理 食べ物'
+            };
+        }
+
+
+        // Initialize the application
+        function initializeApp() {
+            // Initialize upload area
+            initializeUploadArea();
+            
+            // Initialize with English selected
+            selectLanguage('en');
+            
+            // Add smooth scrolling to all anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+            
+            // Add intersection observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe all sections
+            document.querySelectorAll('section').forEach(section => {
+                observer.observe(section);
+            });
+        }
+
+
+        // Simple test function
+        function testUpload() {
+            console.log('Testing upload...');
+            const fileInput = document.getElementById('fileInput');
+            console.log('File input:', fileInput);
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        // Test function to check if local files can be loaded
+        async function testLocalFileAccess() {
+            console.log('Testing local file access...');
+            try {
+                const response = await fetch('./menu_en.js');
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+                if (response.ok) {
+                    const content = await response.text();
+                    console.log('Content length:', content.length);
+                    console.log('First 100 chars:', content.substring(0, 100));
+                    return true;
+                } else {
+                    console.error('File not accessible:', response.status);
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error accessing local file:', error);
+                return false;
+            }
+        }
+
+        // Test function to verify JavaScript execution
+        async function testJavaScriptExecution() {
+            console.log('Testing JavaScript execution...');
+            try {
+                const response = await fetch('./menu_ja.js');
+                if (response.ok) {
+                    const content = await response.text();
+                    console.log('Content loaded, length:', content.length);
+                    
+                    // Clear any existing variables
+                    delete window.polishMenuData;
+                    delete window.sichuanMenuData;
+                    delete window.menuData;
+                    
+                    // Execute the script
+                    eval(content);
+                    
+                    // Check what variables were created
+                    console.log('Variables after execution:');
+                    console.log('- polishMenuData:', window.polishMenuData);
+                    console.log('- sichuanMenuData:', window.sichuanMenuData);
+                    console.log('- menuData:', window.menuData);
+                    
+                    if (window.polishMenuData) {
+                        console.log('✅ polishMenuData found with', window.polishMenuData.dishes.length, 'dishes');
+                        return window.polishMenuData;
+                    } else {
+                        console.log('❌ No polishMenuData found');
+                        return null;
+                    }
+                } else {
+                    console.error('Failed to load file:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error testing JavaScript execution:', error);
+                return null;
+            }
+        }
+
+        // Test function to check file accessibility
+        async function testFileAccessibility() {
+            console.log('Testing file accessibility...');
+            const filesToTest = ['./menu_ja.js', './menu_en.js', './menu_zh.js', './complete-menu-data.js'];
+            
+            for (const file of filesToTest) {
+                try {
+                    console.log(`Testing ${file}...`);
+                    const response = await fetch(file);
+                    console.log(`${file} - Status: ${response.status}, OK: ${response.ok}`);
+                    
+                    if (response.ok) {
+                        const content = await response.text();
+                        console.log(`${file} - Content length: ${content.length}`);
+                        console.log(`${file} - First 100 chars: ${content.substring(0, 100)}`);
+                        console.log(`${file} - Contains polishMenuData: ${content.includes('polishMenuData')}`);
+                        console.log(`${file} - Contains const: ${content.includes('const')}`);
+                    } else {
+                        console.error(`${file} - Failed to load: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error(`${file} - Error: ${error.message}`);
+                }
+            }
+        }
+
+        // Test function to manually execute menu_ja.js content
+        async function testMenuJaExecution() {
+            console.log('Testing menu_ja.js execution...');
+            try {
+                const response = await fetch('./menu_ja.js');
+                if (response.ok) {
+                    const content = await response.text();
+                    console.log('Content loaded, length:', content.length);
+                    console.log('First 200 chars:', content.substring(0, 200));
+                    console.log('Last 200 chars:', content.substring(content.length - 200));
+                    console.log('Contains const polishMenuData:', content.includes('const polishMenuData'));
+                    
+                    // Clear variables
+                    delete window.polishMenuData;
+                    delete window.sichuanMenuData;
+                    delete window.menuData;
+                    
+                    console.log('About to execute...');
+                    eval(content);
+                    console.log('Execution completed');
+                    
+                    console.log('Variables after execution:');
+                    console.log('polishMenuData:', window.polishMenuData);
+                    console.log('sichuanMenuData:', window.sichuanMenuData);
+                    console.log('menuData:', window.menuData);
+                    
+                    if (window.polishMenuData) {
+                        console.log('SUCCESS: polishMenuData found with', window.polishMenuData.dishes.length, 'dishes');
+                        return window.polishMenuData;
+                    } else {
+                        console.log('FAILURE: No polishMenuData found');
+                        console.log('All window variables:', Object.keys(window).filter(key => key.includes('Menu') || key.includes('menu') || key.includes('polish') || key.includes('data')));
+                        return null;
+                    }
+                } else {
+                    console.error('Failed to load menu_ja.js:', response.status);
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error testing menu_ja.js execution:', error);
+                return null;
+            }
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

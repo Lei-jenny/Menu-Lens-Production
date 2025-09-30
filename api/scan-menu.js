@@ -82,7 +82,7 @@ allergens: A comma-separated string from this list only: ["Fish", "Shellfish", "
         
         console.log(`[${requestId}] Using Gemini 2.0 Flash Lite for menu scanning`);
         
-        // 使用Gemini 2.0 Flash Lite API
+        // 使用Gemini 2.0 Flash Lite API - 发送图片和文本prompt
         const requestBody = {
             "contents": [
                 {

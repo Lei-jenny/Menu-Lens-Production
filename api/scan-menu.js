@@ -257,9 +257,27 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                         try {
                             // 尝试解析JSON响应
                             const jsonMatch = part.text.match(/```json\s*([\s\S]*?)\s*```/) || part.text.match(/\{[\s\S]*\}/);
-                            const jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : part.text;
+                            let jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : part.text;
                             
                             console.log(`[${requestId}] Extracted JSON text:`, jsonText);
+                            
+                            // 清理JSON文本
+                            jsonText = jsonText.trim();
+                            
+                            // 尝试修复常见的JSON格式问题
+                            jsonText = jsonText
+                                .replace(/,\s*}/g, '}')  // 移除对象末尾的逗号
+                                .replace(/,\s*]/g, ']')  // 移除数组末尾的逗号
+                                .replace(/(\w+):/g, '"$1":')  // 确保键被引号包围
+                                .replace(/'/g, '"')  // 将单引号替换为双引号
+                                .replace(/\n\s*/g, ' ')  // 移除换行和多余空格
+                                .replace(/\s+/g, ' ')  // 压缩多个空格为单个空格
+                                .replace(/([^\\])\\([^\\])/g, '$1\\\\$2')  // 修复转义字符
+                                .replace(/\\"/g, '\\"')  // 确保引号正确转义
+                                .replace(/\\n/g, '\\n')  // 确保换行符正确转义
+                                .replace(/\\t/g, '\\t');  // 确保制表符正确转义
+                            
+                            console.log(`[${requestId}] Cleaned JSON text:`, jsonText);
                             
                             const menuData = JSON.parse(jsonText);
                             console.log(`[${requestId}] Parsed menu data:`, JSON.stringify(menuData, null, 2));
@@ -317,6 +335,8 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                             
                         } catch (parseError) {
                             console.error(`[${requestId}] JSON parse error:`, parseError);
+                            console.error(`[${requestId}] Raw JSON text that failed:`, jsonText);
+                            console.error(`[${requestId}] Parse error details:`, parseError.message);
                             console.log(`[${requestId}] Using sample data due to parse error`);
                             
                             // 返回示例数据作为备用
@@ -347,7 +367,7 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     ]
                                 },
                                 source: 'sample_fallback',
-                                error: 'JSON parse failed, using sample data'
+                                error: `JSON parse failed: ${parseError.message}`
                             });
                         }
                     }

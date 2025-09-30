@@ -62,8 +62,8 @@ const polishMenuData = {
 Rules:
 - original: The detected language name of the menu (e.g., "Japanese", "Chinese", "English", "Polish", "Korean", "Thai", etc.)
 - dishes[].original: Use dish name text exactly from the image
-- dishes[].description: Use description text exactly from the image. If there is no description, use an empty string "".
-- Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja).
+- dishes[].description: Use description text exactly from the image. If there is no description, use an empty string "". Do NOT use placeholder text like "Lorem ipsum" or any other filler text.
+- Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja). If the original description is empty, all translations should also be empty strings.
 - tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
 - nutrition:
   - calories: Estimate calories per serving (typical range: 200-800 for main dishes, 100-400 for appetizers)
@@ -264,6 +264,12 @@ If the image is not a menu, return: const polishMenuData = {"error": "This image
                             }
                             
                             console.log(`[${requestId}] Parsed menu data:`, JSON.stringify(menuData, null, 2));
+                            
+                            // 检查menuData是否有效
+                            if (!menuData) {
+                                console.log(`[${requestId}] Menu data is undefined, using sample data`);
+                                throw new Error('Menu data is undefined');
+                            }
                             
                             // 检查是否是错误响应
                             if (menuData.error) {

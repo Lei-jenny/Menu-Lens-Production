@@ -1947,24 +1947,67 @@
                 return;
             }
             
-            // Show loading overlay
-            showLoading();
+            // Check if we have an uploaded file to rescan
+            const uploadedImage = document.getElementById('uploadedImage');
+            const uploadedImagePreview = document.getElementById('uploadedImagePreview');
             
-            // Simulate processing delay with progress
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 20;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
+            if (uploadedImage && uploadedImage.src && uploadedImagePreview && !uploadedImagePreview.classList.contains('hidden')) {
+                // We have an uploaded image, try to rescan it
+                console.log('Rescanning uploaded image...');
+                showNotification('🔄 Rescanning menu with AI...', 'info', 3000);
+                
+                // Get the file from the uploaded image
+                const fileInput = document.getElementById('fileInput');
+                if (fileInput && fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
                     
-                    // Hide loading and show results
+                    // Show loading overlay
+                    showLoading();
+                    
+                    // Rescan the image
+                    scanMenuImage(file).then(scanResult => {
+                        console.log('Rescan result:', scanResult);
+                        
+                        if (scanResult.success && scanResult.data && scanResult.data.dishes && scanResult.data.dishes.length > 0) {
+                            menuData = scanResult.data;
+                            hideLoading();
+                            menuProcessed = true;
+                            displayMenuResults();
+                            showNotification(`Menu rescanned successfully! (${scanResult.data.dishes.length} dishes)`, 'success');
+                        } else {
+                            // Keep existing data if rescan fails
+                            hideLoading();
+                            menuProcessed = true;
+                            displayMenuResults();
+                            showNotification('Using existing menu data. Rescan failed.', 'warning');
+                        }
+                    }).catch(error => {
+                        console.error('Rescan error:', error);
+                        hideLoading();
+                        menuProcessed = true;
+                        displayMenuResults();
+                        showNotification('Using existing menu data. Rescan error.', 'warning');
+                    });
+                } else {
+                    // No file available, use existing data
+                    showLoading();
+                    setTimeout(() => {
+                        hideLoading();
+                        menuProcessed = true;
+                        displayMenuResults();
+                        showNotification('Menu processed successfully!', 'success');
+                    }, 1000);
+                }
+            } else {
+                // No uploaded image, use existing data
+                showLoading();
+                setTimeout(() => {
                     hideLoading();
-                    menuProcessed = true; // Mark menu as processed
+                    menuProcessed = true;
                     displayMenuResults();
                     showNotification('Menu processed successfully!', 'success');
-                }
-            }, 300);
+                }, 1000);
+            }
         }
 
         function displayMenuResults() {

@@ -68,9 +68,9 @@ JSON
 
 Rules:
 
-original & description: Use text exactly from the image. If there is no description, use an empty string "".
+original & description: Use text exactly from the image. If there is no description, use an empty string "". Do NOT use any placeholder text like "Lorem ipsum" or similar.
 
-Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja).
+Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja). If the original description is empty, all translated descriptions must also be empty strings "".
 
 tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
 

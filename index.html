@@ -912,6 +912,10 @@
             z-index: 1000;
         }
 
+        .loading-overlay.show {
+            display: flex;
+        }
+
         .loading-spinner {
             width: 60px;
             height: 60px;
@@ -1742,16 +1746,16 @@
         }
 
         // Notification system
-        function showNotification(message, type = 'success', duration = 5000) {
+        function showNotification(message, type = 'success', duration = 3000) {
             const notification = document.getElementById('notification');
             const indicator = document.getElementById('notificationIndicator');
             
             notification.textContent = message;
             notification.className = `notification ${type}`;
             
-            // Show indicator instead of notification
-            indicator.style.display = 'block';
-            notification.classList.remove('show');
+            // Show notification directly
+            notification.classList.add('show');
+            indicator.style.display = 'none';
             
             console.log(`[${type.toUpperCase()}] ${message}`);
             
@@ -1760,9 +1764,9 @@
                 clearTimeout(notification.timeoutId);
             }
             
-            // Set new timeout to hide indicator
+            // Set new timeout to hide notification
             notification.timeoutId = setTimeout(() => {
-                indicator.style.display = 'none';
+                notification.classList.remove('show');
                 // Clean up timeout reference
                 delete notification.timeoutId;
             }, duration);
@@ -1783,11 +1787,11 @@
 
         // Loading overlay
         function showLoading() {
-            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingOverlay').classList.add('show');
         }
 
         function hideLoading() {
-            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('loadingOverlay').classList.remove('show');
         }
 
         function selectLanguage(lang) {
@@ -2634,9 +2638,7 @@
             // Initialize upload area
             initializeUploadArea();
             
-            // Set up notification click handlers
-            document.getElementById('notification').addEventListener('click', toggleNotification);
-            document.getElementById('notificationIndicator').addEventListener('click', toggleNotification);
+            // Notification system is now auto-showing, no click handlers needed
             
             // Initialize with English selected
             selectLanguage('en');

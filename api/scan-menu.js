@@ -48,11 +48,11 @@ JSON example:
       "description_ja": "牛肉と玉子豆腐、自家製一味味噌辛子。",
       "tags": ["contains-beef", "contains-egg"],
       "nutrition": {
-        "calories": null,
-        "protein": null,
-        "carbs": null,
-        "fat": null,
-        "sodium": null,
+        "calories": 450,
+        "protein": 35,
+        "carbs": 8,
+        "fat": 28,
+        "sodium": 680,
         "allergens": "Beef, Egg, Soy"
       }
     }
@@ -64,8 +64,13 @@ Rules:
 - Translations: Provide translations for the name and description in English (en), Chinese (zh), and Japanese (ja).
 - tags: Infer ingredients. Must be an array of strings from this list only: ["contains-seafood", "contains-beef", "contains-poultry", "contains-pork", "contains-egg", "contains-nuts", "contains-dairy", "contains-gluten", "vegetarian", "vegan", "spicy", "alcohol"].
 - nutrition:
+  - calories: Estimate calories per serving (typical range: 200-800 for main dishes, 100-400 for appetizers)
+  - protein: Estimate protein in grams (typical range: 10-50g for main dishes, 5-20g for appetizers)
+  - carbs: Estimate carbohydrates in grams (typical range: 5-60g for main dishes, 2-30g for appetizers)
+  - fat: Estimate fat in grams (typical range: 5-40g for main dishes, 2-20g for appetizers)
+  - sodium: Estimate sodium in milligrams (typical range: 200-1500mg for main dishes, 100-800mg for appetizers)
   - allergens: A comma-separated string from this list only: ["Fish", "Shellfish", "Beef", "Poultry", "Pork", "Egg", "Soy", "Wheat", "Dairy", "Nuts", "Alcohol"]. Use "None" if no allergens are found.
-  - All other nutrition fields (calories, protein, etc.) MUST be null.
+  - Base estimates on dish type, ingredients, and cooking method. Use reasonable ranges for restaurant portions.
 
 If the image is not a menu, return: {"error": "This image does not appear to be a menu. Please upload a clear menu image."}`;
         
@@ -158,11 +163,11 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
                             "description_ja": "サンプル説明",
                             "tags": ["vegetarian"],
                             "nutrition": {
-                                "calories": null,
-                                "protein": null,
-                                "carbs": null,
-                                "fat": null,
-                                "sodium": null,
+                                "calories": 320,
+                                "protein": 12,
+                                "carbs": 45,
+                                "fat": 8,
+                                "sodium": 420,
                                 "allergens": "None"
                             }
                         }
@@ -198,11 +203,11 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
                             "description_ja": "サンプル説明",
                             "tags": ["vegetarian"],
                             "nutrition": {
-                                "calories": null,
-                                "protein": null,
-                                "carbs": null,
-                                "fat": null,
-                                "sodium": null,
+                                "calories": 320,
+                                "protein": 12,
+                                "carbs": 45,
+                                "fat": 8,
+                                "sodium": 420,
                                 "allergens": "None"
                             }
                         }
@@ -349,4 +354,3 @@ If the image is not a menu, return: {"error": "This image does not appear to be 
         });
     }
 }
-

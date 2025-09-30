@@ -283,9 +283,61 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                 .replace(/\[\s*,/g, '[')  // 修复数组开头的逗号
                                 .replace(/,\s*\]/g, ']')  // 修复数组结尾的逗号
                                 .replace(/\{\s*,/g, '{')  // 修复对象开头的逗号
-                                .replace(/,\s*\}/g, '}');  // 修复对象结尾的逗号
+                                .replace(/,\s*\}/g, '}')  // 修复对象结尾的逗号
+                                .replace(/\}\s*\]/g, '}]')  // 修复数组结尾缺少逗号
+                                .replace(/\}\s*\}/g, '}}')  // 修复对象结尾缺少逗号
+                                .replace(/\}\s*$/g, '}]}');  // 修复JSON结尾缺少闭合括号
                             
                             console.log(`[${requestId}] Cleaned JSON text:`, jsonText);
+                            
+                            // 智能修复JSON结构
+                            function fixJsonStructure(jsonStr) {
+                                // 计算括号和方括号的平衡
+                                let openBraces = 0;
+                                let openBrackets = 0;
+                                let inString = false;
+                                let escapeNext = false;
+                                
+                                for (let i = 0; i < jsonStr.length; i++) {
+                                    const char = jsonStr[i];
+                                    
+                                    if (escapeNext) {
+                                        escapeNext = false;
+                                        continue;
+                                    }
+                                    
+                                    if (char === '\\') {
+                                        escapeNext = true;
+                                        continue;
+                                    }
+                                    
+                                    if (char === '"' && !escapeNext) {
+                                        inString = !inString;
+                                        continue;
+                                    }
+                                    
+                                    if (!inString) {
+                                        if (char === '{') openBraces++;
+                                        else if (char === '}') openBraces--;
+                                        else if (char === '[') openBrackets++;
+                                        else if (char === ']') openBrackets--;
+                                    }
+                                }
+                                
+                                // 如果缺少闭合括号，添加它们
+                                if (openBrackets > 0) {
+                                    jsonStr += ']'.repeat(openBrackets);
+                                }
+                                if (openBraces > 0) {
+                                    jsonStr += '}'.repeat(openBraces);
+                                }
+                                
+                                return jsonStr;
+                            }
+                            
+                            // 应用智能修复
+                            jsonText = fixJsonStructure(jsonText);
+                            console.log(`[${requestId}] After structure fix:`, jsonText);
                             
                             // 尝试多次修复JSON
                             let attempts = 0;
@@ -308,7 +360,12 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                             .replace(/\{\s*,/g, '{')  // 修复对象开头逗号
                                             .replace(/,\s*\}/g, '}')  // 修复对象结尾逗号
                                             .replace(/([^,}])\s*([,}])/g, '$1$2')  // 移除逗号前的空格
-                                            .replace(/([^,{])\s*([,{])/g, '$1$2');  // 移除逗号后的空格
+                                            .replace(/([^,{])\s*([,{])/g, '$1$2')  // 移除逗号后的空格
+                                            .replace(/\}\s*\]/g, '}]')  // 修复数组结尾缺少逗号
+                                            .replace(/\}\s*\}/g, '}}')  // 修复对象结尾缺少逗号
+                                            .replace(/\}\s*$/g, '}]}')  // 修复JSON结尾缺少闭合括号
+                                            .replace(/([^,}])\s*([,}])/g, '$1$2')  // 再次清理空格
+                                            .replace(/([^,{])\s*([,{])/g, '$1$2');  // 再次清理空格
                                         
                                         console.log(`[${requestId}] Attempting additional JSON fixes, attempt ${attempts + 1}`);
                                     } else {

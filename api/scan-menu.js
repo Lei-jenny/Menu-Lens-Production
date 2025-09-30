@@ -254,10 +254,13 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                     if (part.text) {
                         console.log(`[${requestId}] Gemini returned text:`, part.text);
                         
+                        // 在try块外声明jsonText变量
+                        let jsonText = '';
+                        
                         try {
                             // 尝试解析JSON响应
                             const jsonMatch = part.text.match(/```json\s*([\s\S]*?)\s*```/) || part.text.match(/\{[\s\S]*\}/);
-                            let jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : part.text;
+                            jsonText = jsonMatch ? jsonMatch[1] || jsonMatch[0] : part.text;
                             
                             console.log(`[${requestId}] Extracted JSON text:`, jsonText);
                             
@@ -275,11 +278,44 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                 .replace(/([^\\])\\([^\\])/g, '$1\\\\$2')  // 修复转义字符
                                 .replace(/\\"/g, '\\"')  // 确保引号正确转义
                                 .replace(/\\n/g, '\\n')  // 确保换行符正确转义
-                                .replace(/\\t/g, '\\t');  // 确保制表符正确转义
+                                .replace(/\\t/g, '\\t')  // 确保制表符正确转义
+                                .replace(/,\s*,/g, ',')  // 移除重复的逗号
+                                .replace(/\[\s*,/g, '[')  // 修复数组开头的逗号
+                                .replace(/,\s*\]/g, ']')  // 修复数组结尾的逗号
+                                .replace(/\{\s*,/g, '{')  // 修复对象开头的逗号
+                                .replace(/,\s*\}/g, '}');  // 修复对象结尾的逗号
                             
                             console.log(`[${requestId}] Cleaned JSON text:`, jsonText);
                             
-                            const menuData = JSON.parse(jsonText);
+                            // 尝试多次修复JSON
+                            let attempts = 0;
+                            let menuData = null;
+                            
+                            while (attempts < 3) {
+                                try {
+                                    menuData = JSON.parse(jsonText);
+                                    break; // 成功解析，跳出循环
+                                } catch (parseError) {
+                                    attempts++;
+                                    console.log(`[${requestId}] JSON parse attempt ${attempts} failed:`, parseError.message);
+                                    
+                                    if (attempts < 3) {
+                                        // 尝试额外的修复
+                                        jsonText = jsonText
+                                            .replace(/,\s*,/g, ',')  // 移除重复逗号
+                                            .replace(/\[\s*,/g, '[')  // 修复数组开头逗号
+                                            .replace(/,\s*\]/g, ']')  // 修复数组结尾逗号
+                                            .replace(/\{\s*,/g, '{')  // 修复对象开头逗号
+                                            .replace(/,\s*\}/g, '}')  // 修复对象结尾逗号
+                                            .replace(/([^,}])\s*([,}])/g, '$1$2')  // 移除逗号前的空格
+                                            .replace(/([^,{])\s*([,{])/g, '$1$2');  // 移除逗号后的空格
+                                        
+                                        console.log(`[${requestId}] Attempting additional JSON fixes, attempt ${attempts + 1}`);
+                                    } else {
+                                        throw parseError; // 最终失败，抛出错误
+                                    }
+                                }
+                            }
                             console.log(`[${requestId}] Parsed menu data:`, JSON.stringify(menuData, null, 2));
                             
                             // 检查是否是错误响应

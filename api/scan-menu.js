@@ -269,31 +269,20 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                             // 清理JSON文本
                             jsonText = jsonText.trim();
                             
-                            // 尝试修复常见的JSON格式问题
-                            jsonText = jsonText
-                                .replace(/,\s*}/g, '}')  // 移除对象末尾的逗号
-                                .replace(/,\s*]/g, ']')  // 移除数组末尾的逗号
-                                .replace(/(\w+):/g, '"$1":')  // 确保键被引号包围
-                                .replace(/'/g, '"')  // 将单引号替换为双引号
-                                .replace(/\n\s*/g, ' ')  // 移除换行和多余空格
-                                .replace(/\s+/g, ' ')  // 压缩多个空格为单个空格
-                                .replace(/([^\\])\\([^\\])/g, '$1\\\\$2')  // 修复转义字符
-                                .replace(/\\"/g, '\\"')  // 确保引号正确转义
-                                .replace(/\\n/g, '\\n')  // 确保换行符正确转义
-                                .replace(/\\t/g, '\\t')  // 确保制表符正确转义
-                                .replace(/,\s*,/g, ',')  // 移除重复的逗号
-                                .replace(/\[\s*,/g, '[')  // 修复数组开头的逗号
-                                .replace(/,\s*\]/g, ']')  // 修复数组结尾的逗号
-                                .replace(/\{\s*,/g, '{')  // 修复对象开头的逗号
-                                .replace(/,\s*\}/g, '}')  // 修复对象结尾的逗号
-                                .replace(/\}\s*\]/g, '}]')  // 修复数组结尾缺少逗号
-                                .replace(/\}\s*\}/g, '}}')  // 修复对象结尾缺少逗号
-                                .replace(/\}\s*$/g, '}]}');  // 修复JSON结尾缺少闭合括号
+                            // 第一步：修复字符串内的撇号问题（在处理引号之前）
+                            // 将 "Today"s" 这样的错误格式修复为 "Today's"
+                            jsonText = jsonText.replace(/"(\w+)"s\s/g, '"$1\'s ');
                             
                             console.log(`[${requestId}] Cleaned JSON text:`, jsonText);
                             
                             // 智能修复JSON结构
                             function fixJsonStructure(jsonStr) {
+                                // 移除末尾多余的闭合括号
+                                jsonStr = jsonStr.replace(/(\}+|\]+)+$/g, (match) => {
+                                    // 只保留必要的闭合括号
+                                    return match.substring(0, Math.min(match.length, 3));
+                                });
+                                
                                 // 计算括号和方括号的平衡
                                 let openBraces = 0;
                                 let openBrackets = 0;
@@ -339,11 +328,6 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                             
                             // 高级JSON修复函数
                             function advancedJsonFix(jsonStr) {
-                                // 首先修复引号转义问题
-                                jsonStr = jsonStr
-                                    .replace(/\\"/g, '"')  // 修复错误的引号转义
-                                    .replace(/\\\\/g, '\\');  // 修复双重转义
-                                
                                 // 修复常见的JSON问题
                                 jsonStr = jsonStr
                                     // 修复缺失的逗号
@@ -353,13 +337,7 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     .replace(/"\s*]\s*{/g, '", {')  // 数组和对象之间缺少逗号
                                     // 修复多余的逗号
                                     .replace(/,\s*}/g, '}')  // 对象结尾的逗号
-                                    .replace(/,\s*]/g, ']')  // 数组结尾的逗号
-                                    // 修复缺失的引号
-                                    .replace(/(\w+):/g, '"$1":')  // 键名加引号
-                                    // 修复数组和对象结构
-                                    .replace(/\}\s*\]/g, '}]')  // 数组结尾
-                                    .replace(/\}\s*\}/g, '}}')  // 对象结尾
-                                    .replace(/\}\s*$/g, '}]}');  // JSON结尾
+                                    .replace(/,\s*]/g, ']');  // 数组结尾的逗号
                                 
                                 return jsonStr;
                             }
@@ -387,20 +365,16 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     
                                     if (attempts < 3) {
                                         // 尝试额外的修复
+                                        // 再次修复撇号问题
+                                        jsonText = jsonText.replace(/"(\w+)"s\s/g, '"$1\'s ');
+                                        
                                         jsonText = advancedJsonFix(jsonText);
                                         jsonText = jsonText
                                             .replace(/,\s*,/g, ',')  // 移除重复逗号
                                             .replace(/\[\s*,/g, '[')  // 修复数组开头逗号
                                             .replace(/,\s*\]/g, ']')  // 修复数组结尾逗号
                                             .replace(/\{\s*,/g, '{')  // 修复对象开头逗号
-                                            .replace(/,\s*\}/g, '}')  // 修复对象结尾逗号
-                                            .replace(/([^,}])\s*([,}])/g, '$1$2')  // 移除逗号前的空格
-                                            .replace(/([^,{])\s*([,{])/g, '$1$2')  // 移除逗号后的空格
-                                            .replace(/\}\s*\]/g, '}]')  // 修复数组结尾缺少逗号
-                                            .replace(/\}\s*\}/g, '}}')  // 修复对象结尾缺少逗号
-                                            .replace(/\}\s*$/g, '}]}')  // 修复JSON结尾缺少闭合括号
-                                            .replace(/([^,}])\s*([,}])/g, '$1$2')  // 再次清理空格
-                                            .replace(/([^,{])\s*([,{])/g, '$1$2');  // 再次清理空格
+                                            .replace(/,\s*\}/g, '}');  // 修复对象结尾逗号
                                         
                                         console.log(`[${requestId}] Attempting additional JSON fixes, attempt ${attempts + 1}`);
                                     } else {

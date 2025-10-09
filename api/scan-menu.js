@@ -278,20 +278,13 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                             
                             // 智能修复JSON结构
                             function fixJsonStructure(jsonStr) {
-                                // 首先移除末尾所有多余的闭合括号
-                                // 找到最后一个有意义的字符位置
-                                let lastMeaningfulIndex = jsonStr.length - 1;
-                                while (lastMeaningfulIndex >= 0 && /[\s\}\]]/.test(jsonStr[lastMeaningfulIndex])) {
-                                    lastMeaningfulIndex--;
-                                }
-                                
-                                // 从最后一个有意义的字符开始，重新计算需要的闭合括号
+                                // 计算整个字符串的括号平衡
                                 let openBraces = 0;
                                 let openBrackets = 0;
                                 let inString = false;
                                 let escapeNext = false;
                                 
-                                for (let i = 0; i <= lastMeaningfulIndex; i++) {
+                                for (let i = 0; i < jsonStr.length; i++) {
                                     const char = jsonStr[i];
                                     
                                     if (escapeNext) {
@@ -317,15 +310,38 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     }
                                 }
                                 
-                                // 截取到最后一个有意义的字符
-                                jsonStr = jsonStr.substring(0, lastMeaningfulIndex + 1);
+                                console.log(`[${requestId}] Bracket balance - Braces: ${openBraces}, Brackets: ${openBrackets}`);
                                 
-                                // 添加缺少的闭合括号（最多3个，避免过度添加）
-                                if (openBrackets > 0 && openBrackets <= 3) {
+                                // 如果有未闭合的括号，添加它们
+                                if (openBraces > 0) {
+                                    console.log(`[${requestId}] Adding ${openBraces} closing braces`);
+                                    jsonStr += '}'.repeat(openBraces);
+                                }
+                                if (openBrackets > 0) {
+                                    console.log(`[${requestId}] Adding ${openBrackets} closing brackets`);
                                     jsonStr += ']'.repeat(openBrackets);
                                 }
-                                if (openBraces > 0 && openBraces <= 3) {
-                                    jsonStr += '}'.repeat(openBraces);
+                                
+                                // 如果有多余的闭合括号（负数），尝试移除末尾多余的
+                                if (openBraces < 0) {
+                                    console.log(`[${requestId}] Removing ${Math.abs(openBraces)} excess closing braces`);
+                                    let excessBraces = Math.abs(openBraces);
+                                    for (let i = jsonStr.length - 1; i >= 0 && excessBraces > 0; i--) {
+                                        if (jsonStr[i] === '}') {
+                                            jsonStr = jsonStr.substring(0, i) + jsonStr.substring(i + 1);
+                                            excessBraces--;
+                                        }
+                                    }
+                                }
+                                if (openBrackets < 0) {
+                                    console.log(`[${requestId}] Removing ${Math.abs(openBrackets)} excess closing brackets`);
+                                    let excessBrackets = Math.abs(openBrackets);
+                                    for (let i = jsonStr.length - 1; i >= 0 && excessBrackets > 0; i--) {
+                                        if (jsonStr[i] === ']') {
+                                            jsonStr = jsonStr.substring(0, i) + jsonStr.substring(i + 1);
+                                            excessBrackets--;
+                                        }
+                                    }
                                 }
                                 
                                 return jsonStr;

@@ -270,26 +270,28 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                             jsonText = jsonText.trim();
                             
                             // 第一步：修复字符串内的撇号问题（在处理引号之前）
-                            // 将 "Today"s" 这样的错误格式修复为 "Today's"
-                            jsonText = jsonText.replace(/"(\w+)"s\s/g, '"$1\'s ');
+                            // 将 "today"s" 这样的错误格式修复为 "today's"
+                            // 匹配模式：word + "s + 空格/逗号/引号
+                            jsonText = jsonText.replace(/"(\w+)"s(\s|,|")/g, '"$1\'s$2');
                             
-                            console.log(`[${requestId}] Cleaned JSON text:`, jsonText);
+                            console.log(`[${requestId}] After apostrophe fix:`, jsonText.substring(0, 500));
                             
                             // 智能修复JSON结构
                             function fixJsonStructure(jsonStr) {
-                                // 移除末尾多余的闭合括号
-                                jsonStr = jsonStr.replace(/(\}+|\]+)+$/g, (match) => {
-                                    // 只保留必要的闭合括号
-                                    return match.substring(0, Math.min(match.length, 3));
-                                });
+                                // 首先移除末尾所有多余的闭合括号
+                                // 找到最后一个有意义的字符位置
+                                let lastMeaningfulIndex = jsonStr.length - 1;
+                                while (lastMeaningfulIndex >= 0 && /[\s\}\]]/.test(jsonStr[lastMeaningfulIndex])) {
+                                    lastMeaningfulIndex--;
+                                }
                                 
-                                // 计算括号和方括号的平衡
+                                // 从最后一个有意义的字符开始，重新计算需要的闭合括号
                                 let openBraces = 0;
                                 let openBrackets = 0;
                                 let inString = false;
                                 let escapeNext = false;
                                 
-                                for (let i = 0; i < jsonStr.length; i++) {
+                                for (let i = 0; i <= lastMeaningfulIndex; i++) {
                                     const char = jsonStr[i];
                                     
                                     if (escapeNext) {
@@ -315,11 +317,14 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     }
                                 }
                                 
-                                // 如果缺少闭合括号，添加它们
-                                if (openBrackets > 0) {
+                                // 截取到最后一个有意义的字符
+                                jsonStr = jsonStr.substring(0, lastMeaningfulIndex + 1);
+                                
+                                // 添加缺少的闭合括号（最多3个，避免过度添加）
+                                if (openBrackets > 0 && openBrackets <= 3) {
                                     jsonStr += ']'.repeat(openBrackets);
                                 }
-                                if (openBraces > 0) {
+                                if (openBraces > 0 && openBraces <= 3) {
                                     jsonStr += '}'.repeat(openBraces);
                                 }
                                 
@@ -365,8 +370,8 @@ REMEMBER: Empty descriptions = empty strings "", not placeholder text!`;
                                     
                                     if (attempts < 3) {
                                         // 尝试额外的修复
-                                        // 再次修复撇号问题
-                                        jsonText = jsonText.replace(/"(\w+)"s\s/g, '"$1\'s ');
+                                        // 再次修复撇号问题（使用更精确的模式）
+                                        jsonText = jsonText.replace(/"(\w+)"s(\s|,|")/g, '"$1\'s$2');
                                         
                                         jsonText = advancedJsonFix(jsonText);
                                         jsonText = jsonText

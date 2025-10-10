@@ -1591,6 +1591,68 @@
         };
 
         // Translation functions
+        function translateAllergens(allergensString) {
+            // 过敏原翻译映射
+            const allergenTranslations = {
+                'en': {
+                    'Fish': 'Fish',
+                    'Shellfish': 'Shellfish',
+                    'Beef': 'Beef',
+                    'Poultry': 'Poultry',
+                    'Pork': 'Pork',
+                    'Egg': 'Egg',
+                    'Soy': 'Soy',
+                    'Wheat': 'Wheat',
+                    'Dairy': 'Dairy',
+                    'Nuts': 'Nuts',
+                    'Alcohol': 'Alcohol',
+                    'None': 'None'
+                },
+                'zh': {
+                    'Fish': '鱼',
+                    'Shellfish': '贝类',
+                    'Beef': '牛肉',
+                    'Poultry': '禽肉',
+                    'Pork': '猪肉',
+                    'Egg': '鸡蛋',
+                    'Soy': '大豆',
+                    'Wheat': '小麦',
+                    'Dairy': '乳制品',
+                    'Nuts': '坚果',
+                    'Alcohol': '酒精',
+                    'None': '无'
+                },
+                'ja': {
+                    'Fish': '魚',
+                    'Shellfish': '貝類',
+                    'Beef': '牛肉',
+                    'Poultry': '鶏肉',
+                    'Pork': '豚肉',
+                    'Egg': '卵',
+                    'Soy': '大豆',
+                    'Wheat': '小麦',
+                    'Dairy': '乳製品',
+                    'Nuts': 'ナッツ',
+                    'Alcohol': 'アルコール',
+                    'None': 'なし'
+                }
+            };
+
+            if (!allergensString) return '';
+            
+            // 分割过敏原字符串（逗号分隔）
+            const allergenList = allergensString.split(',').map(a => a.trim());
+            
+            // 翻译每个过敏原
+            const translatedList = allergenList.map(allergen => {
+                return allergenTranslations[currentLang][allergen] || allergen;
+            });
+            
+            // 根据语言使用不同的分隔符
+            const separator = currentLang === 'ja' ? '、' : (currentLang === 'zh' ? '、' : ', ');
+            return translatedList.join(separator);
+        }
+
         function getTranslation(key) {
             const translations = {
                 'en': {
@@ -2127,7 +2189,7 @@
                             <div class="nutrition-label">${getTranslation('sodium')}</div>
                         </div>
                         <div class="nutrition-item">
-                            <div class="nutrition-value">${dish.nutrition.allergens}</div>
+                            <div class="nutrition-value">${translateAllergens(dish.nutrition.allergens)}</div>
                             <div class="nutrition-label">${getTranslation('allergens')}</div>
                         </div>
                     </div>

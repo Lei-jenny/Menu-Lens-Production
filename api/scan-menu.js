@@ -276,6 +276,28 @@ allergens: A comma-separated string from this list only: ["Fish", "Shellfish", "
                             
                             // 验证数据结构
                             if (menuData.original && menuData.dishes && Array.isArray(menuData.dishes)) {
+                                // 后处理：清理 Lorem ipsum 占位符文本
+                                console.log(`[${requestId}] Post-processing to remove Lorem ipsum text...`);
+                                
+                                menuData.dishes.forEach((dish, index) => {
+                                    // 检查并清理 description 字段
+                                    const fieldsToClean = ['description', 'description_en', 'description_zh', 'description_ja'];
+                                    
+                                    fieldsToClean.forEach(field => {
+                                        if (dish[field] && typeof dish[field] === 'string') {
+                                            // 检查是否包含 Lorem ipsum 或类似占位符文本
+                                            if (dish[field].includes('Lorem ipsum') || 
+                                                dish[field].includes('dolor sit amet') ||
+                                                dish[field].includes('consectetuer adipiscing') ||
+                                                dish[field].includes('sed diam nonummy') ||
+                                                dish[field].includes('nibh euismod')) {
+                                                console.log(`[${requestId}] Cleaning ${field} for dish ${index}: "${dish[field]}"`);
+                                                dish[field] = "";
+                                            }
+                                        }
+                                    });
+                                });
+                                
                                 console.log(`[${requestId}] Menu scan successful`);
                                 return res.status(200).json({
                                     success: true,

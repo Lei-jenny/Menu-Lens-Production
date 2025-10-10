@@ -1645,11 +1645,11 @@
             
             // 翻译每个过敏原
             const translatedList = allergenList.map(allergen => {
-                return allergenTranslations[currentLang][allergen] || allergen;
+                return allergenTranslations[selectedLanguage][allergen] || allergen;
             });
             
             // 根据语言使用不同的分隔符
-            const separator = currentLang === 'ja' ? '、' : (currentLang === 'zh' ? '、' : ', ');
+            const separator = selectedLanguage === 'ja' ? '、' : (selectedLanguage === 'zh' ? '、' : ', ');
             return translatedList.join(separator);
         }
 
